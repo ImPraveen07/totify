@@ -825,8 +825,9 @@ if (librarySearchIcon) {
     });
 }
 
-
-// --- PLAYER CONTROLS ---
+// =======================
+// PLAYER CONTROLS
+// =======================
 
 function togglePlayPause() {
     if (currentTrackIndex === -1) return; // No track selected
@@ -834,46 +835,42 @@ function togglePlayPause() {
     if (isPlaying) {
         currentAudio.pause();
         isPlaying = false;
-
-        // Update UI
-        mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
-        miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
-
-        // Update notification to show paused state
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = "paused";
-            updateMediaNotification(); // custom function to refresh notification
-        }
-
+        updatePlayButtonUI("play");
     } else {
         if (currentAudio.src) {
             currentAudio.play().catch(e => console.error("Play failed:", e));
             isPlaying = true;
-
-            // Update UI
-            mainPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            miniPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
-
-            // Update notification to show playing state
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.playbackState = "playing";
-                updateMediaNotification(); // refresh with current time
-            }
+            updatePlayButtonUI("pause");
         } else {
             console.warn("Audio source not set, cannot play.");
+            return;
         }
     }
 
+    updateMediaNotification();
     updatePlaylistView(); // refresh playlist highlight
 }
 
-// Helper function to update Media Session notification
+function updatePlayButtonUI(state) {
+    const icon = state === "play" ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+    mainPlayBtn.innerHTML = icon;
+    miniPlayBtn.innerHTML = icon;
+
+    if ("mediaSession" in navigator) {
+        navigator.mediaSession.playbackState = state === "play" ? "paused" : "playing";
+    }
+}
+
+// =======================
+// MEDIA SESSION & NOTIFICATION
+// =======================
+
 function updateMediaNotification() {
     if (currentTrackIndex === -1 || !allTracks[currentTrackIndex]) return;
 
     const track = allTracks[currentTrackIndex];
 
-    if ('mediaSession' in navigator) {
+    if ("mediaSession" in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: track.title || "Unknown",
             artist: track.artist || "Unknown",
@@ -881,8 +878,7 @@ function updateMediaNotification() {
             artwork: track.artwork || [] // array of {src, sizes, type}
         });
 
-        // Update position in notification
-        if ('setPositionState' in navigator.mediaSession) {
+        if ("setPositionState" in navigator.mediaSession) {
             navigator.mediaSession.setPositionState({
                 duration: currentAudio.duration || 0,
                 position: currentAudio.currentTime || 0,
@@ -892,57 +888,48 @@ function updateMediaNotification() {
     }
 }
 
-// Optional: keep the notification updated every second while playing
+// Keep MediaSession position updated while playing
 currentAudio.addEventListener('timeupdate', () => {
     if (isPlaying) updateMediaNotification();
 });
-// =======================
-// MEDIA SESSION + NOTIFICATION
-// =======================
 
-// Ask notification permission
+// Request notification permission if not granted
 if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
 }
 
-function updateMediaSession(track, imageSource) {
+function updateMediaSession(track, imageSrc) {
     if (!("mediaSession" in navigator)) return;
 
     navigator.mediaSession.metadata = new MediaMetadata({
-        title: track.title,
-        artist: track.artist,
-        artwork: [
-            { src: imageSource, sizes: "512x512", type: "image/png" }
-        ]
+        title: track.title || "Unknown",
+        artist: track.artist || "Unknown",
+        artwork: [{ src: imageSrc, sizes: "512x512", type: "image/png" }]
     });
 
     navigator.mediaSession.setActionHandler("play", () => {
         currentAudio.play();
         isPlaying = true;
-        mainPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        miniPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        updatePlayButtonUI("pause");
     });
 
     navigator.mediaSession.setActionHandler("pause", () => {
         currentAudio.pause();
         isPlaying = false;
-        mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
-        miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+        updatePlayButtonUI("play");
     });
 
     navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
     navigator.mediaSession.setActionHandler("previoustrack", prevTrack);
 
-    // Show system notification
-    showSongNotification(track, imageSource);
+    showSongNotification(track, imageSrc);
 }
 
 function showSongNotification(track, imageSrc) {
-    if (!("Notification" in window)) return;
-    if (Notification.permission !== "granted") return;
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
 
     const options = {
-        body: track.artist,
+        body: track.artist || "",
         icon: imageSrc,
         badge: imageSrc,
         tag: "now-playing",
@@ -951,15 +938,31 @@ function showSongNotification(track, imageSrc) {
 
     navigator.serviceWorker.getRegistration().then(reg => {
         if (reg) {
-            reg.showNotification(track.title, options);
+            reg.showNotification(track.title || "Unknown", options);
         } else {
-            new Notification(track.title, options);
+            new Notification(track.title || "Unknown", options);
         }
     });
 }
+
+// =======================
+// LOAD TRACK
+// =======================
+
 function loadTrack(index, autoPlay = true) {
     const track = allTracks.find(t => t.index === index);
     if (!track) return;
+
+    currentTrackIndex = index;
+    currentAudio.src = track.src || "";
+    updateMediaSession(track, track.artwork?.[0]?.src || "");
+
+    if (autoPlay) togglePlayPause();
+    else updatePlayButtonUI("play");
+
+    updatePlaylistView();
+}
+
 
     // Pause old track if playing
     if(currentAudio && isPlaying) {
