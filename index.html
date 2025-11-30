@@ -9,7 +9,6 @@
 <meta property="og:image:height" content="512">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://your-github-username.github.io/your-repo-name/">
-
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Spotify Clone App">
 <meta name="twitter:description" content="Listen to music like Spotify. Your music-library and more.">
@@ -22,10 +21,7 @@
 <meta name="theme-color" content="#1db954">
 <link rel="apple-touch-icon" href="s192.png">
 <style>
-/* ---------------------------------------------------- */
-/* --- Global Styles & Variables --- */
-/* ---------------------------------------------------- */
-:root {
+:root{
     --spotify-black: #121212;
     --spotify-dark-grey: #181818;
     --spotify-light-grey: #b3b3b3;
@@ -33,599 +29,107 @@
     --text-faded: #a7a7a7;
     --bg-darker: #000000;
 }
-
-body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background: var(--spotify-black);
-    color: white;
-    min-height: 100vh;
-}
-
-/* NEW: Style to lock the background scroll when the player is active */
-.lock-scroll {
-    overflow: hidden; 
-    position: fixed; 
-    width: 100%;
-    height: 100%;
-}
-
-
-/* --- Main View Container & Pages --- */
-.main-content {
-    /* Keep this padding to ensure main page content scrolls above fixed mini-player/footer */
-    padding-bottom: 120px; 
-}
-
-.app-page {
-    display: none; /* Hide all pages initially */
-    min-height: 100vh; /* Allow content to push height beyond the viewport for scrolling */
-}
-
-.app-page.active {
-    display: block;
-}
-
-/* --- Your Library Page --- */
-.library-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    padding-top: 50px;
-    font-size: 24px;
-    font-weight: 700;
-}
-
-.library-header .title {
-    font-size: 24px;
-    font-weight: 700;
-}
-
-.library-filter-tabs {
-    padding: 8px 16px;
-    display: flex;
-    gap: 10px;
-}
-
-.filter-tab {
-    padding: 6px 12px;
-    border: 1px solid var(--text-faded);
-    border-radius: 20px;
-    font-size: 14px;
-    cursor: pointer;
-    color: white;
-}
-.filter-tab.active {
-    background: white;
-    color: var(--spotify-black);
-    border-color: white;
-}
-
-.library-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 16px;
-    font-size: 14px;
-    color: var(--text-faded);
-}
-
-.library-controls i {
-    color: var(--text-faded);
-    margin-right: 5px;
-}
-
-/* --- Track/Item List (Used for Library & Search Results) --- */
-.track-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.track-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: background-color 0.1s ease;
-    
-    /* Animation initial state: hidden and slightly offset */
-    opacity: 0;
-    transform: translateY(10px);
-}
-
-.track-item.show {
-    /* Animation final state: visible */
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-}
-
-.track-item:hover {
-    background-color: var(--spotify-dark-grey);
-}
-
-.track-item.playing .track-info h3 {
-    color: var(--spotify-green); 
-}
-
-.track-img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    margin-right: 12px;
-    border-radius: 4px; /* Use rounded corners for album art */
-}
-
-.track-info {
-    flex-grow: 1;
-    min-width: 0; 
-}
-
-.track-info h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.track-info p {
-    margin: 2px 0 0 0;
-    font-size: 13px;
-    color: var(--text-faded);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.track-duration {
-    font-size: 13px;
-    color: var(--text-faded);
-    margin-right: 15px;
-}
-.track-item .track-duration {
-    display: none; 
-}
-
-/* --- ARTIST ITEM STYLE (For Library > Artists tab) --- */
-.artist-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: background-color 0.1s ease;
-}
-
-.artist-item:hover {
-    background-color: var(--spotify-dark-grey);
-}
-
-.artist-img {
-    width: 60px; /* Slightly larger image */
-    height: 60px;
-    object-fit: cover;
-    margin-right: 12px;
-    border-radius: 50%; /* Make it circular like in the screenshot */
-}
-
-.artist-info {
-    flex-grow: 1;
-    min-width: 0; 
-}
-
-.artist-info h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.artist-info p {
-    margin: 2px 0 0 0;
-    font-size: 13px;
-    color: var(--text-faded);
-}
-/* --- END ARTIST ITEM STYLE --- */
-
-
-/* --- Search Page --- */
-.search-page {
-    padding-bottom: 0;
-}
-
-.search-header {
-    padding: 16px;
-    padding-top: 50px;
-    font-size: 24px;
-    font-weight: 700;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.search-bar {
-    display: flex;
-    align-items: center;
-    background: white;
-    color: var(--spotify-black);
-    border-radius: 6px;
-    margin: 0 16px 20px 16px;
-    padding: 10px;
-}
-
-.search-bar i {
-    font-size: 18px;
-    margin-right: 10px;
-}
-
-.search-bar input {
-    border: none;
-    outline: none;
-    background: transparent;
-    color: var(--spotify-black);
-    font-size: 16px;
-    flex-grow: 1;
-}
-
-/* --- Search Results & Browsing Hide/Show --- */
-.start-browsing {
-    padding: 0 16px;
-}
-
-.browsing-section.hidden {
-    display: none;
-}
-
-.browsing-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    padding: 16px;
-}
-
-.grid-item {
-    height: 100px;
-    border-radius: 8px;
-    background: linear-gradient(to bottom right, #4CAF50, #2E8B57);
-    padding: 10px;
-    font-weight: 700;
-    font-size: 16px;
-    overflow: hidden;
-    position: relative;
-}
-
-/* Example Gradient Colors */
-.grid-item:nth-child(1) { background: linear-gradient(to bottom right, #AA1445, #E93F6A); } 
-.grid-item:nth-child(2) { background: linear-gradient(to bottom right, #1E8145, #38A169); } 
-.grid-item:nth-child(3) { background: linear-gradient(to bottom right, #800080, #A020F0); } 
-.grid-item:nth-child(4) { background: linear-gradient(to bottom right, #005A9C, #0080C0); } 
-
-
-/* ---------------------------------------------------- */
-/* --- EXPANDED PLAYER STYLES (Collapsible Header & Popular List) --- */
-/* ---------------------------------------------------- */
-.expanded-player {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    /* Subtle change to the dynamic background for modern look */
-    background: linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%);
-    z-index: 100; 
-    display: flex; 
-    flex-direction: column; 
-    padding: 0; 
-    box-sizing: border-box;
-    /* CHANGE 1: Smooth transition for responsive resizing */
-    transition: transform 0.3s ease-in-out, background 0.5s ease; 
-    transform: translateY(100%); 
-}
-
-/* NEW: Added translation for swiping down/away */
-.expanded-player.is-dragging {
-    transition: none; /* Disable transition while dragging */
-}
-
-.expanded-player.active { 
-    transform: translateY(0); 
-}
-
-/* CRITICAL WRAPPER: Handles the single continuous scroll */
-.player-content-wrapper {
-    flex-grow: 1; 
-    overflow-y: auto; 
-    -webkit-overflow-scrolling: touch; 
-    padding-bottom: 80px; 
-}
-
-/* Ensure all primary sections have horizontal padding */
-.player-header,
-.player-details,
-.progress-container,
-.controls-row {
-    padding-left: 16px;
-    padding-right: 16px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* CRITICAL FOR SCROLL ANIMATION: The header remains at the top */
-.player-header { 
-    display: flex; justify-content: space-between; align-items: center; 
-    margin-bottom: 20px; padding-top: 20px;
-    position: sticky; /* Sticky header */
-    top: 0;
-    z-index: 50; /* Above the scrolling content */
-    /* Dynamic background applied by JS on scroll */
-    background-color: transparent; 
-    transition: background-color 0.1s ease-in;
-}
-.player-header i { font-size: 24px; cursor: pointer; }
-.player-header .playlist-indicator { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: var(--text-faded); }
-
-/* CRITICAL FOR COLLAPSING EFFECT: This is the container for the shrinking image */
-.player-art-container { 
-    display: flex; justify-content: center; align-items: center; 
-    padding-top: 30px; 
-    padding-bottom: 30px; 
-    /* Padding removed here for the new structure, but keeping it for a fallback if needed */
-    padding-left: 16px;
-    padding-right: 16px;
-}
-.player-art { 
-    width: 80vw; /* Use viewport width for proportional scaling */
-    max-width: 350px; 
-    aspect-ratio: 1 / 1; 
-    border-radius: 8px; 
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); 
-    /* NEW: Add transition for smooth resizing and scaling origin */
-    transition: all 0.2s ease-out; 
-    transform-origin: center center;
-}
-
-.player-details { margin: 0 0 20px 0; display: flex; justify-content: space-between; align-items: flex-end; }
-.player-details h2 { margin: 0; font-size: 24px; font-weight: 700; }
-.player-details p { margin: 2px 0 0 0; font-size: 16px; color: var(--text-faded); }
-
-.progress-container { margin-bottom: 20px; }
-.time-stamps { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-faded); margin-top: 5px; }
-
-.controls-row { display: flex; justify-content: space-around; align-items: center; font-size: 24px; margin-bottom: 20px; }
-.controls-row button { background: none; border: none; color: white; cursor: pointer; padding: 10px; outline: none; }
-.controls-row .main-play { font-size: 72px; }
-
-/* Range Input (Progress Bar) */
-input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #535353; outline: none; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: white; cursor: pointer; }
-
-/* --- UPDATED ARTIST CARD STYLES (COLLAPSING SECTION) --- */
-.artist-card-expanded {
-    /* Subtle Liquid Glass Effect */
-    background: transparent;
-    /* The banner is now part of the scrolling content */
-    margin: 0; 
-    padding: 0; 
-    overflow: hidden;
-    border: none; 
-}
-
-/* CRITICAL: Artist Banner Area (Lana Del Rey image) */
-.artist-banner-area {
-    /* Height must be large enough to trigger scroll before content starts */
-    height: 350px; 
-    position: relative;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end; 
-    color: white;
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-bottom: 10px; 
-    /* Fading gradient to hide scroll artifacts */
-    box-shadow: inset 0 -150px 70px -50px rgba(0, 0, 0, 0.7);
-    transition: background-image 0.5s ease;
-}
-
-.artist-details-overlay {
-    /* This section contains the big name, monthly listeners, and follow button */
-    padding-top: 10px; 
-    padding-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    transition: opacity 0.2s ease-out; /* For fade out on scroll */
-}
-
-.artist-details-overlay h2 {
-    font-size: 32px; 
-    font-weight: 700;
-    margin: 0;
-}
-
-.artist-details-overlay p {
-    font-size: 16px;
-    color: var(--text-faded);
-    margin: 0;
-}
-
-.follow-btn-large {
-    align-self: flex-start;
-    padding: 10px 30px;
-    border: 1px solid white;
-    border-radius: 25px;
-    color: white;
-    background: none;
-    font-weight: 700;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-size: 14px;
-    margin-top: 15px;
-}
-
-/* NEW LIQUID GLASS STYLE FOR LYRICS PREVIEW */
-.lyrics-preview {
-    text-align:center; 
-    padding: 15px; 
-    background: rgba(30, 30, 30, 0.7); /* Use the same transparent background */
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 12px; 
-    margin: 10px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-}
-
-/* --- NEW POPULAR TRACKS STYLES (MATCHING SCREENSHOT) --- */
-.popular-title {
-    padding: 16px;
-    font-size: 20px;
-    font-weight: 700;
-    margin-top: 20px;
-    margin-bottom: 0;
-}
-
-/* Style for track items *inside* the expanded player (Popular tracks) */
-#artistPopularTracks .track-item {
-    padding: 8px 16px;
-    display: grid;
-    /* Define 4 columns: Number, Image, Info, Controls */
-    grid-template-columns: 20px 40px 1fr 40px; 
-    gap: 12px;
-}
-
-#artistPopularTracks .track-item:hover {
-    background-color: var(--spotify-dark-grey);
-}
-
-#artistPopularTracks .track-item .track-img {
-    width: 40px; 
-    height: 40px;
-    border-radius: 2px;
-    margin-right: 0;
-}
-
-/* Element for track number */
-.track-number {
-    font-size: 16px;
-    color: var(--text-faded);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* The track info container inside the grid */
-#artistPopularTracks .track-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin-right: 0;
-}
-
-#artistPopularTracks .track-info p {
-    font-size: 13px;
-    color: var(--text-faded);
-}
-
-/* Container for the checkmark and options dots */
-.track-controls {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-}
-.track-controls i {
-    color: var(--text-faded);
-    font-size: 18px;
-}
-.track-controls .check-icon {
-    color: var(--spotify-green);
-    font-size: 20px;
-}
-/* Hide track duration in this view */
-#artistPopularTracks .track-duration {
-    display: none;
-}
-
-.artist-pick-section {
-    margin-bottom: 30px;
-}
-
-
-/* --- MINI PLAYER BAR --- */
-.mini-player {
-    position: fixed; bottom: 60px; left: 5px; right: 5px; height: 55px;
-    background: #404040; border-radius: 8px; display: flex;
-    align-items: center; padding: 0 10px; z-index: 50; cursor: pointer;
-    transform: translateY(100%); transition: transform 0.3s ease-in-out;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
-}
-.mini-player.active { transform: translateY(0); }
-.mini-track-info { flex-grow: 1; padding: 0 10px; }
-.mini-track-info h4 { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mini-track-info p { margin: 0; font-size: 12px; color: var(--text-faded); }
-.mini-controls button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0 5px; }
-.mini-controls .mini-check { color: var(--spotify-green); font-size: 22px; padding: 0 8px; }
-
-
-/* --- FOOTER NAVIGATION (LIQUID GLASS EFFECT APPLIED) --- */
-.footer-nav {
-    position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
-    /* CHANGE: Liquid Glass Effect */
-    background: rgba(18, 18, 18, 0.85); /* Slightly transparent dark background */
-    backdrop-filter: blur(10px);        /* Frosted Glass Effect */
-    -webkit-backdrop-filter: blur(10px);/* For Safari support */
-    /* Original display properties */
-    display: flex;
-    justify-content: space-around; 
-    align-items: center; 
-    z-index: 55;
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
-.nav-item {
-    color: var(--text-faded);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 12px;
-    padding-top: 5px;
-    cursor: pointer;
-}
-.nav-item.active {
-    color: white;
-}
-
-/* NEW: Media Query for larger screens to keep player proportional but not massive */
-@media (min-width: 768px) {
-    .expanded-player {
-        /* On larger screens, center the player content */
-        align-items: center; 
-    }
-    .player-content-wrapper {
-        /* Constraint max width for readability */
-        max-width: 500px; 
-        width: 100%;
-    }
-    .player-header,
-    .player-details,
-    .progress-container,
-    .controls-row {
-        /* Remove padding on wrappers, rely on max-width */
-        padding-left: 0;
-        padding-right: 0;
-    }
-    .player-art { 
-        width: 60vw; /* Slightly smaller on very wide screens */
-        max-width: 300px; /* Cap size */
-    }
+body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);color:white;min-height:100vh;}
+.lock-scroll{overflow:hidden;position:fixed;width:100%;height:100%;}
+.main-content{padding-bottom:120px;}
+.app-page{display:none;min-height:100vh;}
+.app-page.active{display:block;}
+.library-header{display:flex;justify-content:space-between;align-items:center;padding:16px;padding-top:50px;font-size:24px;font-weight:700;}
+.library-header .title{font-size:24px;font-weight:700;}
+.library-filter-tabs{padding:8px 16px;display:flex;gap:10px;}
+.filter-tab{padding:6px 12px;border:1px solid var(--text-faded);border-radius:20px;font-size:14px;cursor:pointer;color:white;}
+.filter-tab.active{background:white;color:var(--spotify-black);border-color:white;}
+.library-controls{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;font-size:14px;color:var(--text-faded);}
+.library-controls i{color:var(--text-faded);margin-right:5px;}
+.track-list{list-style:none;padding:0;margin:0;}
+.track-item{display:flex;align-items:center;padding:8px 16px;cursor:pointer;transition:background-color 0.1s ease;opacity:0;transform:translateY(10px);}
+.track-item.show{opacity:1;transform:translateY(0);transition:opacity 0.3s ease-out,transform 0.3s ease-out;}
+.track-item:hover{background-color:var(--spotify-dark-grey);}
+.track-item.playing .track-info h3{color:var(--spotify-green);}
+.track-img{width:50px;height:50px;object-fit:cover;margin-right:12px;border-radius:4px;}
+.track-info{flex-grow:1;min-width:0;}
+.track-info h3{margin:0;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.track-info p{margin:2px 0 0 0;font-size:13px;color:var(--text-faded);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.track-duration{font-size:13px;color:var(--text-faded);margin-right:15px;}
+.track-item .track-duration{display:none;}
+.artist-item{display:flex;align-items:center;padding:8px 16px;cursor:pointer;transition:background-color 0.1s ease;}
+.artist-item:hover{background-color:var(--spotify-dark-grey);}
+.artist-img{width:60px;height:60px;object-fit:cover;margin-right:12px;border-radius:50%;}
+.artist-info{flex-grow:1;min-width:0;}
+.artist-info h3{margin:0;font-size:16px;font-weight:600;}
+.artist-info p{margin:2px 0 0 0;font-size:13px;color:var(--text-faded);}
+.search-page{padding-bottom:0;}
+.search-header{padding:16px;padding-top:50px;font-size:24px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.search-bar{display:flex;align-items:center;background:white;color:var(--spotify-black);border-radius:6px;margin:0 16px 20px 16px;padding:10px;}
+.search-bar i{font-size:18px;margin-right:10px;}
+.search-bar input{border:none;outline:none;background:transparent;color:var(--spotify-black);font-size:16px;flex-grow:1;}
+.start-browsing{padding:0 16px;}
+.browsing-section.hidden{display:none;}
+.browsing-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:16px;}
+.grid-item{height:100px;border-radius:8px;background:linear-gradient(to bottom right, #4CAF50, #2E8B57);padding:10px;font-weight:700;font-size:16px;overflow:hidden;position:relative;}
+.grid-item:nth-child(1){background:linear-gradient(to bottom right, #AA1445, #E93F6A);} 
+.grid-item:nth-child(2){background:linear-gradient(to bottom right, #1E8145, #38A169);} 
+.grid-item:nth-child(3){background:linear-gradient(to bottom right, #800080, #A020F0);} 
+.grid-item:nth-child(4){background:linear-gradient(to bottom right, #005A9C, #0080C0);} 
+.expanded-player{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%);z-index:100;display:flex;flex-direction:column;padding:0;box-sizing:border-box;transition:transform 0.3s ease-in-out,background 0.5s ease;transform:translateY(100%);}
+.expanded-player.is-dragging{transition:none;}
+.expanded-player.active{transform:translateY(0);}
+.player-content-wrapper{flex-grow:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;}
+.player-header,.player-details,.progress-container,.controls-row{padding-left:16px;padding-right:16px;width:100%;box-sizing:border-box;}
+.player-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-top:20px;position:sticky;top:0;z-index:50;background-color:transparent;transition:background-color 0.1s ease-in;}
+.player-header i{font-size:24px;cursor:pointer;}
+.player-header .playlist-indicator{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--text-faded);}
+.player-art-container{display:flex;justify-content:center;align-items:center;padding-top:30px;padding-bottom:30px;padding-left:16px;padding-right:16px;}
+.player-art{width:80vw;max-width:350px;aspect-ratio:1 / 1;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.7);transition:all 0.2s ease-out;transform-origin:center center;}
+.player-details{margin:0 0 20px 0;display:flex;justify-content:space-between;align-items:flex-end;}
+.player-details h2{margin:0;font-size:24px;font-weight:700;}
+.player-details p{margin:2px 0 0 0;font-size:16px;color:var(--text-faded);}
+.progress-container{margin-bottom:20px;}
+.time-stamps{display:flex;justify-content:space-between;font-size:12px;color:var(--text-faded);margin-top:5px;}
+.controls-row{display:flex;justify-content:space-around;align-items:center;font-size:24px;margin-bottom:20px;}
+.controls-row button{background:none;border:none;color:white;cursor:pointer;padding:10px;outline:none;}
+.controls-row .main-play{font-size:72px;}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:#535353;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:white;cursor:pointer;}
+.artist-card-expanded{background:transparent;margin:0;padding:0;overflow:hidden;border:none;}
+.artist-banner-area{height:350px;position:relative;background-size:cover;background-position:center;background-repeat:no-repeat;display:flex;flex-direction:column;justify-content:flex-end;color:white;padding-left:16px;padding-right:16px;padding-bottom:10px;box-shadow:inset 0 -150px 70px -50px rgba(0,0,0,0.7);transition:background-image 0.5s ease;}
+.artist-details-overlay{padding-top:10px;padding-bottom:20px;display:flex;flex-direction:column;gap:5px;transition:opacity 0.2s ease-out;}
+.artist-details-overlay h2{font-size:32px;font-weight:700;margin:0;}
+.artist-details-overlay p{font-size:16px;color:var(--text-faded);margin:0;}
+.follow-btn-large{align-self:flex-start;padding:10px 30px;border:1px solid white;border-radius:25px;color:white;background:none;font-weight:700;cursor:pointer;text-transform:uppercase;font-size:14px;margin-top:15px;}
+.lyrics-preview{text-align:center;padding:15px;background:rgba(30, 30, 30, 0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:12px;margin:10px 16px;border:1px solid rgba(255, 255, 255, 0.1);}
+.popular-title{padding:16px;font-size:20px;font-weight:700;margin-top:20px;margin-bottom:0;}
+#artistPopularTracks .track-item{padding:8px 16px;display:grid;grid-template-columns:20px 40px 1fr 40px;gap:12px;}
+#artistPopularTracks .track-item:hover{background-color:var(--spotify-dark-grey);}
+#artistPopularTracks .track-item .track-img{width:40px;height:40px;border-radius:2px;margin-right:0;}
+.track-number{font-size:16px;color:var(--text-faded);display:flex;align-items:center;justify-content:center;}
+#artistPopularTracks .track-info{display:flex;flex-direction:column;justify-content:center;margin-right:0;}
+#artistPopularTracks .track-info p{font-size:13px;color:var(--text-faded);}
+.track-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;}
+.track-controls i{color:var(--text-faded);font-size:18px;}
+.track-controls .check-icon{color:var(--spotify-green);font-size:20px;}
+#artistPopularTracks .track-duration{display:none;}
+.artist-pick-section{margin-bottom:30px;}
+.mini-player{position:fixed;bottom:60px;left:5px;right:5px;height:55px;background:#404040;border-radius:8px;display:flex;align-items:center;padding:0 10px;z-index:50;cursor:pointer;transform:translateY(100%);transition:transform 0.3s ease-in-out;box-shadow:0 -2px 10px rgba(0,0,0,0.5);}
+.mini-player.active{transform:translateY(0);}
+.mini-track-info{flex-grow:1;padding:0 10px;}
+.mini-track-info h4{margin:0;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mini-track-info p{margin:0;font-size:12px;color:var(--text-faded);}
+.mini-controls button{background:none;border:none;color:white;font-size:24px;cursor:pointer;padding:0 5px;}
+.mini-controls .mini-check{color:var(--spotify-green);font-size:22px;padding:0 8px;}
+.footer-nav{position:fixed;bottom:0;left:0;width:100%;height:60px;background:rgba(18, 18, 18, 0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;justify-content:space-around;align-items:center;z-index:55;padding-bottom:env(safe-area-inset-bottom);}
+.nav-item{color:var(--text-faded);display:flex;flex-direction:column;align-items:center;font-size:12px;padding-top:5px;cursor:pointer;}
+.nav-item.active{color:white;}
+@media (min-width: 768px){
+    .expanded-player{align-items:center;}
+    .player-content-wrapper{max-width:500px;width:100%;}
+    .player-header,.player-details,.progress-container,.controls-row{padding-left:0;padding-right:0;}
+    .player-art{width:60vw;max-width:300px;}
 }
 </style>
 </head>
 <body>
-
 <div class="main-content">
-    
     <div class="app-page" id="homePage">
         <div class="library-header">
              <span style="font-size: 30px;">👋 Hello!</span>
@@ -635,7 +139,6 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
             <p>Home Feed Content Placeholder</p>
         </div>
     </div>
-
     <div class="app-page" id="searchPage">
         <div class="search-header">
             <span class="title">Search</span>
@@ -645,10 +148,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
             <i class="fas fa-search"></i>
             <input type="text" id="searchInput" placeholder="What do you want to listen to?">
         </div>
-        
-        <ul class="track-list" id="searchResultsContainer">
-            </ul>
-        
+        <ul class="track-list" id="searchResultsContainer"></ul>
         <div class="browsing-section" id="browsingSection">
             <h3 class="start-browsing">Start browsing</h3>
             <div class="browsing-grid">
@@ -657,26 +157,22 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
                 <div class="grid-item">Live Events</div>
                 <div class="grid-item">Home of I-Pop</div>
             </div>
-            
             <h3 class="start-browsing">Discover something new</h3>
             <div style="height: 200px; background: #282828; margin: 16px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
                 <p>Discovery Carousel Placeholder</p>
             </div>
         </div>
     </div>
-
     <div class="app-page active" id="libraryPage">
         <div class="library-header">
             <span class="title">Your Library</span>
             <div><i class="fas fa-search" id="librarySearchIcon" style="margin-right: 20px; cursor: pointer;"></i><i class="fas fa-plus" style="cursor: pointer;"></i></div>
         </div>
-        
         <div class="library-filter-tabs">
             <div class="filter-tab active" data-content="playlists">Playlists</div>
             <div class="filter-tab" data-content="albums">Albums</div>
             <div class="filter-tab" data-content="artists">Artists</div>
         </div>
-
         <div class="library-controls" id="libraryControls">
             <div style="display:flex; align-items:center;">
                 <i class="fas fa-arrow-up"></i>
@@ -684,16 +180,12 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
                 <span>Recents</span>
             </div>
             <i class="fas fa-th-large" style="margin-right: 0;"></i> </div>
-
         <ul class="track-list" id="musicContainer">
             <div style="height: 800px; background: #121212; display: flex; justify-content: center; align-items: center; color: var(--text-faded);">
                 <p>More scrollable content added for testing.</p>
             </div>
         </ul>
-        
-        <ul class="track-list" id="artistContainer" style="display:none;">
-            </ul>
-        
+        <ul class="track-list" id="artistContainer" style="display:none;"></ul>
         <ul class="track-list" id="tracksByArtistContainer" style="display:none;">
              <li id="backToArtists" class="track-item" style="opacity: 1; transform: translateY(0); border-bottom: 1px solid #181818;">
                 <i class="fas fa-chevron-left" style="font-size: 24px; margin-right: 20px;"></i>
@@ -705,11 +197,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
         </ul>
     </div>
 </div>
-
 <div class="expanded-player" id="expandedPlayer">
-    
     <div class="player-content-wrapper">
-        
         <div class="player-header">
             <i class="fas fa-chevron-down" id="minimizeBtn"></i>
             <div class="playlist-indicator">
@@ -718,11 +207,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
             </div>
             <i class="fas fa-ellipsis-v"></i>
         </div>
-
         <div class="player-art-container">
             <img class="player-art" id="playerArt" src="" alt="Album Art">
         </div>
-        
         <div class="player-details">
             <div>
                 <h2 id="playerTrackTitle"></h2>
@@ -730,7 +217,6 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
             </div>
             <i class="fas fa-check-circle" id="likeBtn" style="color:var(--spotify-green); font-size:24px; cursor:pointer;"></i>
         </div>
-
         <div class="progress-container">
             <input type="range" id="playerProgress" min="0" max="100" value="0">
             <div class="time-stamps">
@@ -738,7 +224,6 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
                 <span id="totalTime">0:00</span>
             </div>
         </div>
-
         <div class="controls-row">
             <button id="shuffleBtn"><i class="fas fa-random"></i></button>
             <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
@@ -746,18 +231,14 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
             <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
             <button id="repeatBtn"><i class="fas fa-redo-alt"></i></button>
         </div>
-        
         <div class="controls-row" style="font-size: 18px; margin-top: -10px; margin-bottom: 20px;">
             <button><i class="fas fa-volume-up"></i></button>
             <button><i class="fas fa-mobile-alt"></i></button>
             <button><i class="fas fa-share-alt"></i></button>
             <button id="downloadBtn"><i class="fas fa-download"></i></button> 
         </div>
-
         <div class="scrollable-content">
-            
             <div class="artist-card-expanded">
-                
                 <div class="artist-banner-area" id="artistBannerArea">
                     <div class="artist-details-overlay">
                         <h2 id="expandedArtistName"></h2>
@@ -766,11 +247,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
                     </div>
                 </div>
             </div>
-
             <h3 class="popular-title">Popular</h3>
-            <ul class="track-list" id="artistPopularTracks">
-                </ul>
-
+            <ul class="track-list" id="artistPopularTracks"></ul>
             <div class="artist-pick-section">
                 <h3 class="popular-title">Artist Pick</h3>
                 <div style="padding: 0 16px;">
@@ -779,16 +257,14 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
                     </div>
                 </div>
             </div>
-            
             <div class="lyrics-preview">
                 <p style="margin: 0; font-size: 14px; color: var(--spotify-light-grey);">Lyrics will appear here</p>
                 <p style="font-size: 18px; font-weight: 700;">Scroll Down to Read!</p>
             </div>
-            
-            <div style="height: 100px;"></div> </div>
+            <div style="height: 100px;"></div> 
         </div>
+    </div>
 </div>
-
 <div class="mini-player" id="miniPlayer">
     <img id="miniArt" src="" alt="Album Art" class="track-img" style="width: 40px; height: 40px; border-radius: 2px;">
     <div class="mini-track-info">
@@ -800,7 +276,6 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
         <button id="miniPlayBtn"><i class="fas fa-play"></i></button>
     </div>
 </div>
-
 <div class="footer-nav">
     <div class="nav-item" data-page="homePage">
         <i class="fas fa-home"></i>
@@ -819,11 +294,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
         <span>Premium</span>
     </div>
 </div>
- <script type="module">
-// --- FIREBASE IMPORTS ---
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-
 const firebaseConfig = {
     apiKey: "AIzaSyC9rehsf-0jkb9dAeT1-0Z1C-yRJ0YI9dA",
     authDomain: "gymnm-ce84b.firebaseapp.com",
@@ -833,23 +306,18 @@ const firebaseConfig = {
     appId: "1:474926929394:web:6abdb807caba2751a5c76b",
     measurementId: "G-6R9S8LYZNF"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-// --- GLOBAL STATE ---
 let allTracks = [];
-let allArtists = new Map(); // Map to store unique artists and their details
+let allArtists = new Map();
 let currentTrackIndex = -1; 
 let currentAudio = new Audio();
 let isPlaying = false;   
-
-// --- DOM ELEMENTS ---
 const libraryPage = document.getElementById('libraryPage');
 const musicContainer = document.getElementById('musicContainer');
 const artistContainer = document.getElementById('artistContainer');
 const tracksByArtistContainer = document.getElementById('tracksByArtistContainer');
-const artistPopularTracksContainer = document.getElementById('artistPopularTracks'); // NEW
+const artistPopularTracksContainer = document.getElementById('artistPopularTracks'); 
 const filterTabs = document.querySelectorAll('.library-filter-tabs .filter-tab');
 const libraryControls = document.getElementById('libraryControls');
 const expandedPlayer = document.getElementById('expandedPlayer');
@@ -859,34 +327,25 @@ const miniPlayBtn = document.getElementById('miniPlayBtn');
 const footerNavItems = document.querySelectorAll('.nav-item');
 const downloadBtn = document.getElementById('downloadBtn'); 
 const librarySearchIcon = document.getElementById('librarySearchIcon'); 
-// SEARCH ELEMENTS
 const searchInput = document.getElementById('searchInput');
 const searchResultsContainer = document.getElementById('searchResultsContainer');
 const browsingSection = document.getElementById('browsingSection');
 const backToArtistsBtn = document.getElementById('backToArtists');
-// COLLAPSIBLE HEADER ELEMENTS
 const scrollContentWrapper = document.querySelector('.player-content-wrapper');
 const playerArt = document.getElementById('playerArt');
 const playerHeader = document.querySelector('.player-header');
-
-
-// NEW HELPER: Get the array index from the unique track index
 function getArrayIndexOfTrack(trackIndex) {
     return allTracks.findIndex(t => t.index === trackIndex);
 }
-
-// --- HELPER FUNCTIONS ---
 function formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 }
-
 function getTrackDurationFromURL(url, trackElement) {
     const tempAudio = new Audio(url);
     tempAudio.preload = 'metadata';
-
     tempAudio.onloadedmetadata = () => {
         const duration = Math.round(tempAudio.duration);
         const index = parseInt(trackElement.dataset.index);
@@ -896,36 +355,28 @@ function getTrackDurationFromURL(url, trackElement) {
         }
     };
 }
-
-
-// --- NAVIGATION LOGIC ---
-
 function navigateToPage(pageId) {
     document.querySelectorAll('.app-page').forEach(page => {
         page.classList.remove('active');
     });
     document.getElementById(pageId).classList.add('active');
-
     footerNavItems.forEach(item => {
         item.classList.remove('active');
         if (item.getAttribute('data-page') === pageId) {
             item.classList.add('active');
         }
     });
-
     if (pageId === 'libraryPage' || pageId === 'searchPage') {
         if (allTracks.length === 0) {
-            loadMusicAndArtists(); // Load all data on app start
+            loadMusicAndArtists();
         }
     }
-    
     if (pageId !== 'searchPage') {
         searchInput.value = '';
         searchResultsContainer.innerHTML = '';
         browsingSection.classList.remove('hidden');
     }
 }
-
 footerNavItems.forEach(item => {
     item.addEventListener('click', () => {
         const pageId = item.getAttribute('data-page');
@@ -934,20 +385,13 @@ footerNavItems.forEach(item => {
         }
     });
 });
-
 if (librarySearchIcon) {
     librarySearchIcon.addEventListener('click', () => {
         navigateToPage('searchPage');
     });
 }
-
-// =======================
-// PLAYER CONTROLS
-// =======================
-
 function togglePlayPause() {
-    if (currentTrackIndex === -1) return; // No track selected
-
+    if (currentTrackIndex === -1) return;
     if (isPlaying) {
         currentAudio.pause();
         isPlaying = false;
@@ -962,38 +406,30 @@ function togglePlayPause() {
             return;
         }
     }
-
     updateMediaNotification();
-    updatePlaylistView(); // refresh playlist highlight
+    updatePlaylistView();
 }
-
 function updatePlayButtonUI(state) {
     const icon = state === "play" ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
     mainPlayBtn.innerHTML = icon;
     miniPlayBtn.innerHTML = icon;
-
     if ("mediaSession" in navigator) {
         navigator.mediaSession.playbackState = state === "play" ? "paused" : "playing";
     }
 }
-
 function updateMediaNotification() {
     const currentTrack = allTracks.find(t => t.index === currentTrackIndex);
     if (!currentTrack) return;
-    
-    // FIX: Strictly use the album/song image for the notification/media session art.
     const notificationImage = currentTrack.image_base64 || "s512.png"; 
-    
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: currentTrack.title,      
-            artist: currentTrack.artist,    
+            artist: currentTrack.artists.join(', '),    
             album: currentTrack.album || '', 
             artwork: [
                 { src: notificationImage, sizes: '512x512', type: 'image/jpeg' } 
             ]
         });
-
         if ("setPositionState" in navigator.mediaSession) {
              navigator.mediaSession.setPositionState({
                  duration: currentAudio.duration || 0,
@@ -1003,51 +439,40 @@ function updateMediaNotification() {
         }
     }
 }
-
 currentAudio.addEventListener('timeupdate', () => {
     if (isPlaying) updateMediaNotification();
 });
-
-// Request notification permission if not granted
 if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
 }
-
 function updateMediaSession(track, imageSrc) {
     if (!("mediaSession" in navigator)) return;
-    
     navigator.mediaSession.setActionHandler("play", () => {
         currentAudio.play();
         isPlaying = true;
         updatePlayButtonUI("pause");
         updateMediaNotification(); 
     });
-
     navigator.mediaSession.setActionHandler("pause", () => {
         currentAudio.pause();
         isPlaying = false;
         updatePlayButtonUI("play");
         updateMediaNotification(); 
     });
-
     navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
     navigator.mediaSession.setActionHandler("previoustrack", prevTrack);
-
     updateMediaNotification();
     showSongNotification(track, imageSrc);
 }
-
 function showSongNotification(track, imageSrc) {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
-
     const options = {
-        body: track.artist || "Playback in progress",
-        icon: imageSrc, // Use song image
-        badge: imageSrc, // Use song image
+        body: track.artists.join(', ') || "Playback in progress", 
+        icon: imageSrc, 
+        badge: imageSrc, 
         tag: "now-playing",
         renotify: true
     };
-
     navigator.serviceWorker.getRegistration().then(reg => {
         if (reg) {
             reg.showNotification(track.title || "Unknown Track", options);
@@ -1056,49 +481,32 @@ function showSongNotification(track, imageSrc) {
         }
     });
 }
-
-// =======================
-// LOAD TRACK
-// =======================
-
 async function loadTrack(index, autoPlay = true) {
     const track = allTracks.find(t => t.index === index);
     if (!track) return;
-
     currentTrackIndex = index;
     currentAudio.src = track.url;
     currentAudio.load(); 
-
     if (isPlaying) {
         currentAudio.pause();
         isPlaying = false;
     }
-
     const imageSource = track.image_base64 || "https://via.placeholder.com/200/181818/1db954?text=No+Album+Art";
-    
-    // Fetch artist image from the dedicated artists map for the banner
-    const artistData = allArtists.get(track.artist.toLowerCase());
-    // Use a high-quality artist image for the banner
+    const fullArtistList = track.artists.join(', ');    
+    const primaryArtist = track.primaryArtist;          
+    const artistData = allArtists.get(primaryArtist.toLowerCase());
     const artistImageSource = artistData ? artistData.image_base64_highres || artistData.image_base64 : ''; 
-
-    // 3. Update Player UI elements
     document.getElementById('playerArt').src = imageSource;
     document.getElementById('playerTrackTitle').textContent = track.title;
-    document.getElementById('playerArtistName').textContent = track.artist;
+    document.getElementById('playerArtistName').textContent = fullArtistList;
     document.getElementById('playerTitleSmall').textContent = track.title;
-    
     document.getElementById('miniArt').src = imageSource;
     document.getElementById('miniTitle').textContent = track.title;
-    document.getElementById('miniArtist').textContent = track.artist;
+    document.getElementById('miniArtist').textContent = fullArtistList;
     miniPlayer.classList.add('active'); 
-    
-    // 4. Update Artist Card UI elements
-    document.getElementById('expandedArtistName').innerHTML = `${track.artist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
-    // Mock monthly listeners value
+    document.getElementById('expandedArtistName').innerHTML = `${primaryArtist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
     document.getElementById('expandedMonthlyListeners').textContent = '6.2Cr monthly listeners'; 
     const artistBannerArea = document.getElementById('artistBannerArea');
-    
-    // Apply the artist image as a banner and a dark gradient overlay
     if (artistImageSource) {
          artistBannerArea.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.7)), url('${artistImageSource}')`;
          artistBannerArea.style.backgroundColor = 'transparent';
@@ -1106,64 +514,43 @@ async function loadTrack(index, autoPlay = true) {
          artistBannerArea.style.backgroundImage = 'none';
          artistBannerArea.style.backgroundColor = '#303030';
     }
-    
-    // NEW: Load the popular track list for the expanded player view
-    renderExpandedPlayerPopularTracks(track.artist);
-    
-    // 5. Update Expanded Player's main background (Simplified)
-    // For a more dynamic look, you can derive the color from the album art
+    renderExpandedPlayerPopularTracks(primaryArtist); 
     expandedPlayer.style.background = `linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%)`;
-
-    // 6. Reset progress UI
     document.getElementById('playerProgress').value = 0;
     document.getElementById('currentTime').textContent = '0:00';
     document.getElementById('totalTime').textContent = formatTime(track.duration || 0); 
-
-    // 7. Update MediaSession and show system notification
     updateMediaSession(track, imageSource);
-
-    // 8. Playback and UI State
     if (autoPlay) {
         isPlaying = false; 
         togglePlayPause();
-
         document.getElementById('expandedPlayer').classList.add('active'); 
         document.body.classList.add('lock-scroll'); 
         expandedPlayer.style.transform = ''; 
     } else {
         updatePlayButtonUI("play");
     }
-
-    // Reset scroll position to the top when a new track is loaded
     scrollContentWrapper.scrollTop = 0;
-    // Manually trigger the scroll handler once to set the initial header state
     updateCollapsibleHeader();
-    
     updatePlaylistView();
 }
-
 function nextTrack() {
     const currentArrayIndex = getArrayIndexOfTrack(currentTrackIndex);
     if (currentArrayIndex === -1) return;
-
     let nextArrayIndex = (currentArrayIndex + 1) % allTracks.length;
     const nextTrackData = allTracks[nextArrayIndex];
     if (nextTrackData) {
         loadTrack(nextTrackData.index, true); 
     }
 }
-
 function prevTrack() {
     const currentArrayIndex = getArrayIndexOfTrack(currentTrackIndex);
     if (currentArrayIndex === -1) return;
-    
     let prevArrayIndex = (currentArrayIndex - 1 + allTracks.length) % allTracks.length;
     const prevTrackData = allTracks[prevArrayIndex];
     if (prevTrackData) {
         loadTrack(prevTrackData.index, true);
     }
 }
-
 function updatePlaylistView() {
     const updateItems = (container) => {
         container.querySelectorAll('.track-item').forEach(item => {
@@ -1173,56 +560,45 @@ function updatePlaylistView() {
             }
         });
     }
-    // Update all track containers
     updateItems(musicContainer);
     updateItems(searchResultsContainer);
     updateItems(tracksByArtistContainer);
-    updateItems(artistPopularTracksContainer); // Include popular tracks list
+    updateItems(artistPopularTracksContainer);
 }
-
 function downloadCurrentTrack() {
     if (currentTrackIndex === -1) return;
-
     const track = allTracks.find(t => t.index === currentTrackIndex);
     if (!track || !track.url) {
         alert("Audio URL not available for download.");
         return;
     }
-
     const a = document.createElement('a');
     a.href = track.url;
-    const filename = `${track.title} - ${track.artist || 'Unknown'}.mp3`;
+    const filename = `${track.title} - ${track.artists.join(', ') || 'Unknown'}.mp3`;
     a.download = filename; 
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
     console.log(`Attempting to download: ${filename} from ${track.url}`);
     alert(`Downloading "${track.title}"... (Check your browser downloads)`);
 }
-
-// --- Event Listeners ---
 mainPlayBtn.addEventListener('click', togglePlayPause);
 miniPlayBtn.addEventListener('click', togglePlayPause);
 document.getElementById('nextBtn').addEventListener('click', nextTrack);
 document.getElementById('prevBtn').addEventListener('click', prevTrack);
-
 document.getElementById('minimizeBtn').addEventListener('click', () => {
     document.getElementById('expandedPlayer').classList.remove('active');
     document.body.classList.remove('lock-scroll');
     expandedPlayer.style.transform = ''; 
 });
-
 miniPlayer.addEventListener('click', (e) => {
     if(e.target.closest('#miniPlayBtn') || e.target.closest('.mini-check')) return; 
-    
     if (currentTrackIndex !== -1) {
         expandedPlayer.classList.add('active');
         document.body.classList.add('lock-scroll');
         expandedPlayer.style.transform = ''; 
     }
 });
-
 document.getElementById('playerProgress').addEventListener('input', () => {
     const progress = document.getElementById('playerProgress');
     if(isNaN(currentAudio.duration)) return;
@@ -1237,121 +613,88 @@ currentAudio.addEventListener('timeupdate', () => {
 });
 currentAudio.addEventListener('ended', nextTrack);
 downloadBtn.addEventListener('click', downloadCurrentTrack);
-
-// NEW: Back button for tracks by artist view
 backToArtistsBtn.addEventListener('click', () => {
     showArtists();
 });
-
-// ===================================
-// LIBRARY VIEW SWITCHING LOGIC
-// ===================================
-
 function setActiveLibraryView(viewId) {
-    // Hide all view containers first
     musicContainer.style.display = 'none';
     artistContainer.style.display = 'none';
     tracksByArtistContainer.style.display = 'none';
-
-    // Show the selected container
     document.getElementById(viewId).style.display = 'block';
-
-    // Update library controls visibility (optional, but good practice)
     libraryControls.style.visibility = viewId === 'musicContainer' ? 'visible' : 'hidden';
-
-    // Update filter tabs
     filterTabs.forEach(tab => tab.classList.remove('active'));
     const activeTab = Array.from(filterTabs).find(tab => tab.getAttribute('data-content') + 'Container' === viewId);
     if (activeTab) {
         activeTab.classList.add('active');
     }
 }
-
 filterTabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
         const contentType = e.target.getAttribute('data-content');
-        
-        // Hide track-by-artist view if switching tabs
         if(tracksByArtistContainer.style.display === 'block') {
             tracksByArtistContainer.style.display = 'none';
         }
-
         if (contentType === 'artists') {
             showArtists();
         } else {
-            // Default: Show music/playlists/albums list
             setActiveLibraryView('musicContainer');
-            // Re-render music container to ensure latest highlight
             loadMusic(); 
         }
     });
 });
-
-// ===================================
-// CORE DATA LOADING & RENDERING FUNCTIONS
-// ===================================
-
 async function loadMusicAndArtists() {
     if (allTracks.length === 0) {
         console.log("Loading all data from Firebase...");
-        
-        // 1. Load Tracks
         const musicSnapshot = await getDocs(collection(db, "music"));
         let index = 0;
         musicSnapshot.forEach(doc => {
-            // Mock play_count for the popular list effect
             const data = doc.data();
             const mockPlayCount = Math.floor(Math.random() * (2500000000 - 500000000 + 1)) + 500000000;
+            let artists = [];
+            if (Array.isArray(data.artists)) {
+                artists = data.artists.map(a => a.name.trim());
+            } else if (typeof data.artist === "string") {
+                artists = data.artist.split(',').map(a => a.trim()).filter(a => a.length > 0);
+            }
+            if (artists.length === 0) {
+                artists = ["Unknown Artist"];
+            }
+            let primaryArtist = artists[0];
+            // CRITICAL FIX: Ensure processed 'artists' array (names) overwrites the raw 'artists' array (objects)
             allTracks.push({ 
+                ...data, 
                 id: doc.id, 
                 index: index++, 
                 play_count: data.play_count || mockPlayCount, 
-                ...data 
+                artists: artists, 
+                primaryArtist: primaryArtist, 
             });
         });
         console.log(`Loaded ${allTracks.length} tracks.`);
-
-        // 2. Load Artists
         const artistSnapshot = await getDocs(collection(db, "artists"));
         artistSnapshot.forEach(doc => {
             const data = doc.data();
-            // Store by normalized name for easy lookup
             allArtists.set(data.name.toLowerCase(), {
-                // Mock high-res image for the banner (in a real app, this would be a separate field)
                 image_base64_highres: data.image_base64, 
                 ...data
             });
         });
         console.log(`Loaded ${allArtists.size} unique artists.`);
     }
-
-    // Load initial music list
     loadMusic();
-    
-    // Determine the starting track
     if (allTracks.length > 0 && currentTrackIndex === -1) {
-        // Choose a track that has an artist image for a better first load experience
-        const firstTrack = allTracks.find(t => allArtists.has(t.artist.toLowerCase())) || allTracks[0];
+        const firstTrack = allTracks.find(t => allArtists.has(t.primaryArtist.toLowerCase())) || allTracks[0];
         currentTrackIndex = firstTrack.index; 
         loadTrack(currentTrackIndex, false); 
     }
 }
-
-
 function createTrackListItem(data, containerType, trackNumber = null) {
     const item = document.createElement('li');
     item.className = 'track-item';
     item.dataset.index = data.index; 
-    
-    let artistName = data.artist || 'Unknown Artist';
     let imageSource = data.image_base64 || "https://via.placeholder.com/50/121212/FFFFFF?text=A";
-    
-    let subtitle = `Single • ${artistName}`;
-
     if (trackNumber !== null) {
-        // Render for the Popular Tracks list (numbered)
         const formattedPlays = new Intl.NumberFormat().format(data.play_count);
-        
         item.innerHTML = `
             <div class="track-number">${trackNumber}</div>
             <img class="track-img" src="${imageSource}" alt="Album Art">
@@ -1366,15 +709,14 @@ function createTrackListItem(data, containerType, trackNumber = null) {
         `;
         item.style.opacity = 1;
         item.style.transform = 'translateY(0)';
-        
     } else {
-        // Render for the standard library/search/tracks by artist list
+        const artistNames = data.artists.join(', '); 
+        let subtitle = artistNames;
         if (data.album && data.album !== data.title) {
-             subtitle = data.album;
+             subtitle = `${data.album} • ${artistNames}`;
         } else {
-             subtitle = `Single • ${artistName}`;
+             subtitle = artistNames; 
         }
-        
         item.innerHTML = `
             <img class="track-img" src="${imageSource}" alt="Album Art">
             <div class="track-info">
@@ -1383,48 +725,31 @@ function createTrackListItem(data, containerType, trackNumber = null) {
             </div>
         `;
     }
-    
     item.addEventListener('click', () => {
         loadTrack(data.index, true); 
     });
-    
     if (containerType !== 'search') {
         item.style.opacity = 1;
         item.style.transform = 'translateY(0)';
     }
-
     return item;
 }
-
-/**
- * FIX: This function was previously appending to musicContainer without clearing it first
- * if it was called multiple times. Now it strictly clears and re-renders.
- */
 function loadMusic() {
     musicContainer.innerHTML = '';
-    // Use a set to track unique track IDs if you want to eliminate true duplicates
-    // However, keeping allTracks is generally safer if duplicates represent separate playlist items.
-    
     allTracks.forEach((data) => {
         const item = createTrackListItem(data, 'music');
         musicContainer.appendChild(item);
-        
         if (!data.duration || data.duration === 0) {
             getTrackDurationFromURL(data.url, item);
         }
     });
     updatePlaylistView();
 }
-
-
-// Function to render the list of unique artists
 function createArtistListItem(artistData) {
     const item = document.createElement('li');
     item.className = 'artist-item';
-    
     const artistName = artistData.name;
     const imageSource = artistData.image_base64 || "https://via.placeholder.com/60/121212/FFFFFF?text=A";
-    
     item.innerHTML = `
         <img class="artist-img" src="${imageSource}" alt="${artistName} image">
         <div class="artist-info">
@@ -1432,43 +757,30 @@ function createArtistListItem(artistData) {
             <p>Artist</p>
         </div>
     `;
-    
     item.addEventListener('click', () => {
-        // When clicked, navigate to the list of all their songs
         showTracksByArtist(artistName);
     });
-    
     return item;
 }
-
 function showArtists() {
     setActiveLibraryView('artistContainer');
     artistContainer.innerHTML = '';
-    
     if(allArtists.size === 0) {
          artistContainer.innerHTML = `<li style="padding: 16px; color: var(--text-faded);">No artists found. Please add artists via the Admin Panel.</li>`;
          return;
     }
-
-    // Convert Map values to an array for easy iteration
     Array.from(allArtists.values()).forEach((data) => {
         const item = createArtistListItem(data);
         artistContainer.appendChild(item);
     });
 }
-
-// Function to render the list of all songs by an artist in the Library view
 function showTracksByArtist(artistName) {
     tracksByArtistContainer.innerHTML = '';
-    
-    // 1. Add the "Back to Artists" button at the top
     const backButton = backToArtistsBtn.cloneNode(true);
     backButton.addEventListener('click', () => {
         showArtists();
     });
     tracksByArtistContainer.appendChild(backButton);
-    
-    // 2. Create the header with Artist's name (standard, non-collapsible header for the list view)
     const header = document.createElement('li');
     header.style.padding = '16px';
     header.style.borderBottom = 'none';
@@ -1477,10 +789,9 @@ function showTracksByArtist(artistName) {
         <p style="margin: 2px 0 0 0; font-size: 14px; color: var(--text-faded);">All Tracks</p>
     `;
     tracksByArtistContainer.appendChild(header);
-
-    // 3. Filter and Render all tracks by that artist
-    const tracks = allTracks.filter(track => track.artist.toLowerCase() === artistName.toLowerCase());
-    
+    const tracks = allTracks.filter(track => 
+        track.artists.some(artist => artist.toLowerCase() === artistName.toLowerCase())
+    );
     if (tracks.length === 0) {
         const noSongs = document.createElement('li');
         noSongs.style.padding = '16px';
@@ -1489,92 +800,65 @@ function showTracksByArtist(artistName) {
         tracksByArtistContainer.appendChild(noSongs);
     } else {
         tracks.forEach((data) => {
-            // Use NULL for trackNumber to ensure it renders the standard album art list item
             const item = createTrackListItem(data, 'artistTracks', null); 
             tracksByArtistContainer.appendChild(item);
         });
     }
-
-    // 4. Activate the container
     setActiveLibraryView('tracksByArtistContainer');
     updatePlaylistView();
 }
-
-
-// NEW: Renders the popular tracks list inside the expanded player
 function renderExpandedPlayerPopularTracks(artistName) {
     const popularTracksContainer = document.getElementById('artistPopularTracks');
     popularTracksContainer.innerHTML = '';
-    
-    const tracks = allTracks.filter(track => track.artist.toLowerCase() === artistName.toLowerCase());
-    
-    // Sort by play_count and take the top 6 (mimics the screenshot)
+    const tracks = allTracks.filter(track => 
+        track.primaryArtist.toLowerCase() === artistName.toLowerCase()
+    );
     const popular = tracks.sort((a, b) => (b.play_count || 0) - (a.play_count || 0)).slice(0, 6);
-    
     popular.forEach((data, index) => {
-        // Use track number (index + 1) for the Popular list
         const item = createTrackListItem(data, 'expandedPlayerPopular', index + 1);
         popularTracksContainer.appendChild(item);
     });
 }
-
-
-// --- SEARCH FUNCTIONALITY ---
-
 function renderSearchResults(results) {
     searchResultsContainer.innerHTML = '';
     if (results.length === 0) {
         searchResultsContainer.innerHTML = `<li style="padding: 16px; color: var(--text-faded);">No results found.</li>`;
         return;
     }
-    
     results.forEach((data, i) => {
         const listItemData = { 
             ...data, 
             animationIndex: i 
         }; 
-        
         const item = createTrackListItem(listItemData, 'search');
-        
         item.style.opacity = 0;
         item.style.transform = 'translateY(10px)';
         setTimeout(() => {
             item.classList.add('show');
         }, i * 50); 
-        
         searchResultsContainer.appendChild(item);
     });
     updatePlaylistView();
 }
-
-
 searchInput.addEventListener('input', async (e) => { 
     const query = e.target.value.toLowerCase().trim();
-    
     if (allTracks.length === 0) {
         await loadMusicAndArtists();
     }
-    
     if (query.length > 0) {
         browsingSection.classList.add('hidden');
-        
         const filteredTracks = allTracks.filter(track => {
             return (
                 (track.title && track.title.toLowerCase().includes(query)) ||
-                (track.artist && track.artist.toLowerCase().includes(query))
+                track.artists.some(artist => artist.toLowerCase().includes(query))
             );
         });
-        
         renderSearchResults(filteredTracks);
-        
     } else {
         browsingSection.classList.remove('hidden');
         searchResultsContainer.innerHTML = '';
     }
 });
-
-
-// Initialize the application: start on the library page and load data
 loadMusicAndArtists();
 navigateToPage('libraryPage');
 if ('serviceWorker' in navigator) {
@@ -1584,12 +868,6 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error('SW registration failed:', err));
   });
 }
-
-
-// =========================================================================
-// --- START: CORRECTED TOUCH/SWIPE IMPLEMENTATION ---
-// =========================================================================
-
 let startX = 0;
 let startY = 0;
 let isDragging = false;
@@ -1597,10 +875,6 @@ let isSwipingVertically = false;
 const SWIPE_THRESHOLD_X = 50; 
 const SWIPE_THRESHOLD_Y = 50; 
 const EDGE_THRESHOLD = 30; 
-
-/**
- * Global touch handler to prevent browser/PWA back navigation (from the left edge).
- */
 document.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
         startX = e.touches[0].clientX;
@@ -1609,7 +883,6 @@ document.addEventListener('touchstart', (e) => {
         isSwipingVertically = false;
     }
 }, { passive: true }); 
-
 document.addEventListener('touchmove', (e) => {
     if (e.touches.length === 1) {
         const currentX = e.touches[0].clientX;
@@ -1618,54 +891,35 @@ document.addEventListener('touchmove', (e) => {
         const deltaY = currentY - startY;
         const absDeltaX = Math.abs(deltaX);
         const absDeltaY = Math.abs(deltaY);
-
-        // 1. Prevent unwanted browser back navigation (Left-to-Right swipe from edge)
         if (startX < EDGE_THRESHOLD && deltaX > 0 && absDeltaX > absDeltaY) {
             e.preventDefault(); 
             return;
         }
-        
-        // 2. Player Swipe-Down/Minimize Logic
-        // Check if the player is active AND if the scroll is at the very top (0)
         if (expandedPlayer.classList.contains('active') && scrollContentWrapper.scrollTop === 0) {
-             
-             // If primary motion is vertical (downwards swipe)
              if (absDeltaY > absDeltaX && deltaY > 0 && absDeltaY > 10) { 
                  isSwipingVertically = true;
                  isDragging = true;
-                 
                  expandedPlayer.classList.add('is-dragging');
-                 // Only allow translation downwards (Math.max(0, deltaY))
                  expandedPlayer.style.transform = `translateY(${Math.max(0, deltaY)}px)`;
-                 
-                 e.preventDefault(); // Prevent page scroll
+                 e.preventDefault();
              } 
-             // If primary motion is horizontal (left/right swipe)
              else if (absDeltaX > absDeltaY && absDeltaX > 10) {
-                // Allows horizontal movement inside the player
-                isDragging = true; // Mark as dragging for touchend logic
+                isDragging = true;
                 e.preventDefault();
              }
         }
     }
 }, { passive: false }); 
-
 document.addEventListener('touchend', (e) => {
     if (expandedPlayer.classList.contains('active')) {
         expandedPlayer.classList.remove('is-dragging');
-        // Get final coordinates to calculate swipe distance
         const endX = e.changedTouches[0].clientX;
         const endY = e.changedTouches[0].clientY;
-        const deltaX = startX - endX; // Right-to-Left is positive (for next track)
-        const deltaY = endY - startY; // Downwards is positive (for minimize)
-
+        const deltaX = startX - endX;
+        const deltaY = endY - startY;
         if (isSwipingVertically) {
-            // Player Minimize Swipe Logic
             if (deltaY > SWIPE_THRESHOLD_Y) {
-                // Swipe down threshold met: minimize player
                 expandedPlayer.style.transform = 'translateY(100%)';
-                
-                // CRITICAL FIX: Reset state after transition completes
                 expandedPlayer.addEventListener('transitionend', function handler() {
                     expandedPlayer.classList.remove('active');
                     document.body.classList.remove('lock-scroll');
@@ -1673,66 +927,35 @@ document.addEventListener('touchend', (e) => {
                     expandedPlayer.removeEventListener('transitionend', handler);
                 }, { once: true });
             } else {
-                // Not enough drag: snap back to full screen
                 expandedPlayer.style.transform = 'translateY(0)';
             }
         } else if (isDragging && Math.abs(deltaX) > SWIPE_THRESHOLD_X) {
-            // Horizontal Swipe Logic (Next/Prev Track)
             if (deltaX > 0) {
-                // Swipe Left (Right-to-Left) -> Next Track
                 nextTrack();
             } else {
-                // Swipe Right (Left-to-Right) -> Previous Track
                 prevTrack();
             }
         }
     }
-
-    // Reset state variables
     isDragging = false;
     isSwipingVertically = false;
 }, { passive: true }); 
-
-// =========================================================================
-// --- END: CORRECTED TOUCH/SWIPE IMPLEMENTATION ---
-// =========================================================================
-
-
-// =========================================================================
-// --- START: COLLAPSIBLE HEADER/PARALLAX EFFECT (mimic Spotify scroll) ---
-// =========================================================================
-
-const maxScroll = 250; // The distance over which the header effect takes place (250px)
-
+const maxScroll = 250;
 function updateCollapsibleHeader() {
     const scrollTop = scrollContentWrapper.scrollTop;
-    
-    // 1. Image Scaling (Shrinks from 1 to 0.7 over maxScroll)
     const scaleFactor = Math.max(0.7, 1 - (scrollTop / maxScroll) * 0.3); 
-    const opacityFactor = Math.max(0, 1 - (scrollTop / (maxScroll * 0.8))); // Fades slightly faster
+    const opacityFactor = Math.max(0, 1 - (scrollTop / (maxScroll * 0.8)));
     playerArt.style.transform = `scale(${scaleFactor})`;
     playerArt.style.opacity = opacityFactor;
-    
-    // 2. Header Background (Fades in black)
-    // Opacity goes from 0 to 1 over the first 150px of scroll
     const headerOpacity = Math.min(1, scrollTop / 150); 
     playerHeader.style.backgroundColor = `rgba(18, 18, 18, ${headerOpacity})`;
-
-    // 3. Banner Text Fading (Fades out the big name/follow button)
     const artistDetailsOverlay = document.querySelector('.artist-details-overlay');
     if (artistDetailsOverlay) {
         const bannerOpacity = Math.max(0, 1 - (scrollTop / 100));
         artistDetailsOverlay.style.opacity = bannerOpacity;
     }
 }
-
-// Attach the handler to the scrollable content wrapper
 scrollContentWrapper.addEventListener('scroll', updateCollapsibleHeader);
-
-// =========================================================================
-// --- END: COLLAPSIBLE HEADER/PARALLAX EFFECT ---
-// =========================================================================
 </script>
-
 </body>
 </html>
