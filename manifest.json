@@ -1,7 +1,11 @@
 {
-  "name": "Spotify Clone",
-  "short_name": "Spotify",
-  "description": "A Spotify-like music player PWA",
+  "name": "Totify",
+  "short_name": "Totify",
+  "description": "Totify understands that not everyone can pay big amounts just to hear the songs they love. That's why your journey here begins free, stays truly affordable, and always puts your experience first-because music should comfort you, not burden you.",
+
+
+
+
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#121212",
