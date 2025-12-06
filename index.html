@@ -13,6 +13,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <meta name="theme-color" content="#121212">
+ <link rel="manifest" href="/manifest.json"> 
+
 <style>
 /* --- STYLES --- */
 :root{
@@ -1087,49 +1089,40 @@ filterTabs.forEach(tab => {
     });
 });
 
-// OPTIMIZATION: Load all data once on startup
-async function loadMusicAndArtists() {
-    if (allTracks.length > 0) { 
-        loadMusic(); 
-        hidePreLoader();
-        return; 
-    }
-    try {
-         const musicSnapshot = await getDocs(collection(db, "music"));
-         let tempTracks = [];
-         const uniqueKeys = new Set();
-         let index = 0;
-         musicSnapshot.forEach(doc => {
-             const data = doc.data();
-             const title = data.title ? data.title.trim().toLowerCase() : '';
-             const artistNames = (Array.isArray(data.artists) ? data.artists.map(a => a.name.trim()) : (data.artist || "Unknown").split(',').map(a => a.trim()));
-             const primaryArtist = artistNames[0];
-             const uniqueKey = `${title}|${primaryArtist.toLowerCase()}`;
-             if (uniqueKey && uniqueKeys.has(uniqueKey)) return;
-             uniqueKeys.add(uniqueKey);
-             const mockPlayCount = Math.floor(Math.random() * 2000000000) + 500000;
-             tempTracks.push({ 
-                 ...data, id: doc.id, index: index++, play_count: data.play_count || mockPlayCount, 
-                 artists: artistNames, primaryArtist: primaryArtist, duration: data.duration || 180
-             });
-         });
-         allTracks = tempTracks; 
-         
-         allTracks.forEach(t => {
-             trackPlayCounts[t.index] = t.play_count;
-         });
+// OPTIMIZED loadTrack function
+async function loadTrack(index, autoPlay = true) {
+    const track = allTracks.find(t => t.index === index);
+    if (!track) return;
+    
+    // ... (omitted initial logic) ...
+    
+    // Update Player Details (UI update is fast)
+    // ... (omitted UI updates like playerArt.src, miniPlayer.classList.add('active')) ...
+    
+    playerProgress.value = 0;
+    currentTimeDisplay.textContent = '0:00';
+    totalTimeDisplay.textContent = formatTime(track.duration || 0); 
+    updateMediaSession(track, imageSource);
+    
+    // **<-- THIS IS THE CORRECT PLACE TO INSERT THE FIX (around line 720) **
+    // FIX: Ensure the currently selected track is highlighted/marked
+    updatePlaylistView(); 
 
-         const artistSnapshot = await getDocs(collection(db, "artists"));
-         artistSnapshot.forEach(doc => {
-             const data = doc.data();
-             allArtists.set(data.name.toLowerCase(), { image_base64_highres: data.image_base64, ...data });
-         });
-         
-         loadMusic();
-         hidePreLoader(); 
-    } catch (error) { 
-        console.error("Error loading Firebase data:", error); 
-        hidePreLoader(); 
+    if (autoPlay) {
+        updatePlayButtonUI("loading"); 
+        
+        document.getElementById('expandedPlayer').classList.add('active'); 
+        // ... (rest of the autoplay logic) ...
+        
+        try {
+            await currentAudio.play();
+            // ... (rest of success logic) ...
+            // updatePlaylistView is no longer needed here if it's called above
+        } catch (e) {
+            // ... (rest of error logic) ...
+        }
+    } else {
+        updatePlayButtonUI("play"); 
     }
 }
 
@@ -1525,6 +1518,18 @@ scrollContentWrapper.addEventListener('scroll', updateCollapsibleHeader);
 
 loadLikedData();
 loadMusicAndArtists();
+// Add this block to your main script (inside the <script type="module"> tag)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js') // Ensure the path is correct
+      .then(registration => {
+        console.log('SW registered: ', registration);
+      })
+      .catch(registrationError => {
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
+}
 
 // END JAVASCRIPT LOGIC
 </script>
