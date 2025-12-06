@@ -13,8 +13,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <meta name="theme-color" content="#121212">
- <link rel="manifest" href="/manifest.json"> 
-
 <style>
 /* --- STYLES --- */
 :root{
@@ -397,10 +395,13 @@ input[type=range]:active::-webkit-slider-thumb { visibility: visible; }
     animation: spin 1s linear infinite;
 }
 .small-spinner {
+    /* Used for play button loading state */
+    display: inline-block;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid white;
+    border-radius: 50%;
     width: 24px;
     height: 24px;
-    border-width: 3px;
-    border-top: 3px solid white;
     animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
@@ -606,6 +607,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// --- PWA SERVICE WORKER REGISTRATION FIX ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // ASSUMING 'sw.js' is in the root directory. Change path if needed.
+    navigator.serviceWorker.register('/sw.js') 
+      .then(registration => {
+        console.log('SW registered: ', registration.scope);
+      })
+      .catch(registrationError => {
+        console.error('SW registration failed: ', registrationError);
+      });
+  });
+}
+// --- END PWA FIX ---
+
 // Global State
 let allTracks = [];
 let allArtists = new Map();
@@ -747,6 +763,7 @@ function togglePlayPause() {
     if (isLoading) return; // Prevent action while track is loading
     
     if (currentTrackIndex === -1 && allTracks.length > 0) {
+        // Start playing the first track if nothing is loaded
         loadTrack(allTracks[0].index, true); 
         return;
     }
@@ -754,21 +771,13 @@ function togglePlayPause() {
 
     if (isPlaying) {
         currentAudio.pause();
-        isPlaying = false;
-        updatePlayButtonUI("play"); 
+        // isPlaying and updatePlayButtonUI/updatePlaylistView handled by 'pause' listener
     } else {
-        if (currentAudio.src) {
-            // If already loaded, play immediately
-            currentAudio.play().catch(e => console.error("Play failed:", e));
-            isPlaying = true;
-            updatePlayButtonUI("pause"); 
-        } else {
-             const track = allTracks.find(t => t.index === currentTrackIndex);
-             if (track) loadTrack(track.index, true);
-        }
+        // If loaded, play immediately
+        currentAudio.play().catch(e => console.error("Play failed:", e));
+        // isPlaying and updatePlayButtonUI/updatePlaylistView handled by 'playing' listener
     }
     updateMediaNotification();
-    updatePlaylistView();
 }
 
 function seekTrack(progressValue) {
@@ -777,9 +786,9 @@ function seekTrack(progressValue) {
     currentAudio.currentTime = seekTo;
     
     if (!isPlaying) {
+        // Instantly play if seeking on a paused track
         currentAudio.play().catch(e => console.error("Seek play failed:", e));
-        isPlaying = true;
-        updatePlayButtonUI("pause");
+        // isPlaying and updatePlayButtonUI/updatePlaylistView handled by 'playing' listener
         updateMediaNotification();
     }
 }
@@ -859,29 +868,24 @@ async function loadTrack(index, autoPlay = true) {
     const track = allTracks.find(t => t.index === index);
     if (!track) return;
     
+    // 1. Skip if already playing this track
     if (currentTrackIndex === index && currentAudio.src && !currentAudio.paused) {
         if (autoPlay && !isPlaying) { togglePlayPause(); }
         return;
     }
     
+    // 2. Initial state reset
     if (isPlaying) currentAudio.pause();
     isPlaying = false; 
     currentTrackIndex = index;
 
-    // Reset and Load
-    currentAudio.src = ''; // Clear source
-    currentAudio.load();  // Force audio element reset
-    currentAudio.src = track.url; // Set new source
-    
-    updateLikeButtonUI(index); 
-
+    // 3. UI Update for instantaneous feedback
     const imageSource = track.image_base64 || "https://via.placeholder.com/200/181818/1db954?text=No+Album+Art";
     const fullArtistList = track.artists.join(', ');    
     const primaryArtist = track.primaryArtist;          
     const artistData = allArtists.get(primaryArtist.toLowerCase());
     const artistImageSource = artistData ? artistData.image_base64_highres || artistData.image_base64 : ''; 
 
-    // Update Player Details (UI update is fast)
     playerArt.src = imageSource;
     document.getElementById('playerTrackTitle').textContent = track.title;
     document.getElementById('playerArtistName').textContent = fullArtistList;
@@ -910,25 +914,31 @@ async function loadTrack(index, autoPlay = true) {
     currentTimeDisplay.textContent = '0:00';
     totalTimeDisplay.textContent = formatTime(track.duration || 0); 
     updateMediaSession(track, imageSource);
+    updateLikeButtonUI(index); 
     
+    // CRUCIAL FIX: Update the playlist view immediately to highlight the track
+    updatePlaylistView();
+    
+    // 4. Load Audio and Handle Playback
+    currentAudio.src = track.url; // Set new source
+    currentAudio.load();          // Begin fetching/loading the audio data
+
     if (autoPlay) {
-        updatePlayButtonUI("loading"); // Show loading spinner
+        updatePlayButtonUI("loading"); // Show loading spinner instantly!
         
         document.getElementById('expandedPlayer').classList.add('active'); 
         document.body.classList.add('lock-scroll'); 
         expandedPlayer.style.transform = ''; 
         scrollContentWrapper.scrollTop = 0;
-        updatePlaylistView();
         
-        // Wait for audio to be ready, then play
+        // Use a Promise-based approach for clean async flow
         try {
             await currentAudio.play();
-            isPlaying = true;
-            updatePlayButtonUI("pause"); 
+            // 'playing' event listener handles: isPlaying=true, updatePlayButtonUI("pause"), updatePlaylistView()
             incrementPlayCount(index);
         } catch (e) {
             console.error("Autoplay failed:", e);
-            isPlaying = false;
+            // This happens if the user hasn't interacted with the page, or another error occurred
             updatePlayButtonUI("play");
         }
     } else {
@@ -959,7 +969,11 @@ function updatePlaylistView() {
         container.querySelectorAll('.track-item').forEach(item => {
             const index = parseInt(item.dataset.index);
             const isCurrentTrack = index === currentTrackIndex;
+            
+            // Clear all playing states
             item.classList.remove('playing');
+
+            // Apply playing state only if it is the current track AND it's playing
             if (isCurrentTrack && isPlaying) {
                 item.classList.add('playing');
             }
@@ -1044,14 +1058,7 @@ currentAudio.addEventListener('pause', () => {
 });
 currentAudio.addEventListener('ended', nextTrack);
 
-// NEW: Use the 'canplaythrough' event to signify the audio is buffered enough to play smoothly
-currentAudio.addEventListener('canplaythrough', () => {
-    if (isLoading && !isPlaying) {
-        // This is primarily a backup check; the await currentAudio.play() handles the main logic
-        // But we ensure the loading state is cleared if the audio is ready
-        updatePlayButtonUI("play"); 
-    }
-});
+// NEW: Show loading spinner if the audio starts buffering
 currentAudio.addEventListener('waiting', () => {
     if (isPlaying) {
         updatePlayButtonUI("loading"); 
@@ -1089,40 +1096,49 @@ filterTabs.forEach(tab => {
     });
 });
 
-// OPTIMIZED loadTrack function
-async function loadTrack(index, autoPlay = true) {
-    const track = allTracks.find(t => t.index === index);
-    if (!track) return;
-    
-    // ... (omitted initial logic) ...
-    
-    // Update Player Details (UI update is fast)
-    // ... (omitted UI updates like playerArt.src, miniPlayer.classList.add('active')) ...
-    
-    playerProgress.value = 0;
-    currentTimeDisplay.textContent = '0:00';
-    totalTimeDisplay.textContent = formatTime(track.duration || 0); 
-    updateMediaSession(track, imageSource);
-    
-    // **<-- THIS IS THE CORRECT PLACE TO INSERT THE FIX (around line 720) **
-    // FIX: Ensure the currently selected track is highlighted/marked
-    updatePlaylistView(); 
+// OPTIMIZATION: Load all data once on startup
+async function loadMusicAndArtists() {
+    if (allTracks.length > 0) { 
+        loadMusic(); 
+        hidePreLoader();
+        return; 
+    }
+    try {
+         const musicSnapshot = await getDocs(collection(db, "music"));
+         let tempTracks = [];
+         const uniqueKeys = new Set();
+         let index = 0;
+         musicSnapshot.forEach(doc => {
+             const data = doc.data();
+             const title = data.title ? data.title.trim().toLowerCase() : '';
+             const artistNames = (Array.isArray(data.artists) ? data.artists.map(a => a.name.trim()) : (data.artist || "Unknown").split(',').map(a => a.trim()));
+             const primaryArtist = artistNames[0];
+             const uniqueKey = `${title}|${primaryArtist.toLowerCase()}`;
+             if (uniqueKey && uniqueKeys.has(uniqueKey)) return;
+             uniqueKeys.add(uniqueKey);
+             const mockPlayCount = Math.floor(Math.random() * 2000000000) + 500000;
+             tempTracks.push({ 
+                 ...data, id: doc.id, index: index++, play_count: data.play_count || mockPlayCount, 
+                 artists: artistNames, primaryArtist: primaryArtist, duration: data.duration || 180
+             });
+         });
+         allTracks = tempTracks; 
+         
+         allTracks.forEach(t => {
+             trackPlayCounts[t.index] = t.play_count;
+         });
 
-    if (autoPlay) {
-        updatePlayButtonUI("loading"); 
-        
-        document.getElementById('expandedPlayer').classList.add('active'); 
-        // ... (rest of the autoplay logic) ...
-        
-        try {
-            await currentAudio.play();
-            // ... (rest of success logic) ...
-            // updatePlaylistView is no longer needed here if it's called above
-        } catch (e) {
-            // ... (rest of error logic) ...
-        }
-    } else {
-        updatePlayButtonUI("play"); 
+         const artistSnapshot = await getDocs(collection(db, "artists"));
+         artistSnapshot.forEach(doc => {
+             const data = doc.data();
+             allArtists.set(data.name.toLowerCase(), { image_base64_highres: data.image_base64, ...data });
+         });
+         
+         loadMusic();
+         hidePreLoader(); 
+    } catch (error) { 
+        console.error("Error loading Firebase data:", error); 
+        hidePreLoader(); 
     }
 }
 
@@ -1416,10 +1432,8 @@ document.addEventListener('touchstart', (e) => {
         isHorizontalDrag = false;
         expandedPlayer.classList.add('is-dragging');
         
-        // Use passive: false selectively on the expanded player to prevent default scroll
-        // only when starting near the edges or the top of the content area.
+        // Prevent default scroll when starting a drag near the top
         if (startY < 50 || (scrollContentWrapper.scrollTop === 0 && startY < (window.innerHeight / 2))) {
-            // Prevent default scroll when starting a drag near the top
              e.preventDefault();
         }
     }
@@ -1518,18 +1532,6 @@ scrollContentWrapper.addEventListener('scroll', updateCollapsibleHeader);
 
 loadLikedData();
 loadMusicAndArtists();
-// Add this block to your main script (inside the <script type="module"> tag)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js') // Ensure the path is correct
-      .then(registration => {
-        console.log('SW registered: ', registration);
-      })
-      .catch(registrationError => {
-        console.log('SW registration failed: ', registrationError);
-      });
-  });
-}
 
 // END JAVASCRIPT LOGIC
 </script>
