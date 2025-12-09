@@ -4,7 +4,7 @@
   "short_name": "Totify",
   "description": "Totify understands that not everyone can pay big amounts just to hear the songs they love. It begins free, stays affordable, and always puts listeners first.",
   "lang": "en-IN",
-  "start_url": "/index.html",
+  "start_url": "./",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -41,14 +41,14 @@
       "sizes": "1080x2400",
       "type": "image/png",
       "label": "Totify Home Page",
-      "platform": "narrow"
+      "form_factor": "narrow"
     },
     {
       "src": "/screen2.png",
       "sizes": "1080x2400",
       "type": "image/png",
-      "label": "Music Player",
-      "platform": "narrow"
+      "label": "Music Player Screen",
+      "form_factor": "narrow"
     }
   ],
 
@@ -56,7 +56,7 @@
     {
       "name": "Open Player",
       "short_name": "Player",
-      "description": "Jump directly to the current playing song.",
+      "description": "Jump directly to the currently playing song.",
       "url": "/player",
       "icons": [
         {
