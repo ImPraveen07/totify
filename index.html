@@ -1,43 +1,18 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
-<!-- Social Preview -->
-<meta property="og:title" content="Totify">
-<meta property="og:description" content="Listen to music like Spotify. Your music library and more.">
-<meta property="og:image" content="/s512.png">
-<meta property="og:image:width" content="512">
-<meta property="og:image:height" content="512">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-
-<!-- Viewport -->
+<meta property="og:title" content="Totify"><meta property="og:description" content="Listen to music like Spotify. Your music library and more."><meta property="og:image" content="/s512.png"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Totify</title>
-
-<!-- Fonts & Icons -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-<!-- PWA Manifest -->
 <link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="/s192.png"><link rel="apple-touch-icon" sizes="512x512" href="/s512.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#1db954">
 
-<!-- iOS / Apple PWA Support -->
-<link rel="apple-touch-icon" sizes="180x180" href="/s192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="/s512.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-
-<!-- Android PWA -->
-<meta name="mobile-web-app-capable" content="yes">
-
-<!-- Browser Theme -->
-<meta name="theme-color" content="#1db954"><style>
-/* --- MERGED STYLES (Old UI + New Switch/Animations) --- */
+<style>
+/* --- MERGED STYLES (Ultra Smooth, Premium Glassmorphism) --- */
 :root{
     --spotify-black: #121212;
     --spotify-dark-grey: #181818;
@@ -45,13 +20,17 @@
     --spotify-green: #1db954;
     --text-faded: #a7a7a7;
     --bg-darker: #000000;
+    /* New Glassmorphism Variables */
+    --glass-blur: 20px; /* Increased blur for premium feel */
+    --glass-border-color: rgba(255, 255, 255, 0.08);
+    --transition-premium: 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); /* Apple-like smoothness */
 }
-/* REMOVE DEFAULT MOBILE TAP HIGHLIGHT COLOR */
 * {
     -webkit-tap-highlight-color: transparent;
     box-sizing: border-box;
+    /* Apply premium transition curve universally to non-performance-critical changes */
+    transition: background-color 0.2s ease, color 0.2s ease, transform var(--transition-premium), opacity 0.2s ease;
 }
-/* Ensure the body is set up for smooth mobile scrolling and layout */
 body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);color:white;min-height:100vh; overflow-x: hidden; -webkit-overflow-scrolling: touch;}
 .lock-scroll{overflow:hidden;position:fixed;width:100%;height:100%;}
 .main-content{padding-bottom:120px;}
@@ -60,8 +39,26 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);col
 .library-header{display:flex;justify-content:space-between;align-items:center;padding:16px;padding-top:50px;font-size:24px;font-weight:700;}
 .library-header .title{font-size:24px;font-weight:700;}
 .library-filter-tabs{padding:8px 16px;display:flex;gap:10px;}
-.filter-tab{padding:6px 12px;border:1px solid var(--text-faded);border-radius:20px;font-size:14px;cursor:pointer;color:white;}
-.filter-tab.active{background:white;color:var(--spotify-black);border-color:white;}
+/* --- LIQUID GLASS: Filter Tabs (New) --- */
+.filter-tab{
+    padding:8px 16px;
+    border-radius:25px;
+    font-size:14px;
+    cursor:pointer;
+    color:white;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border-color);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.filter-tab.active{
+    background: white;
+    color: var(--spotify-black);
+    border-color: white;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transform: scale(1.05); /* Subtle emphasis on active */
+}
 .library-controls{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;font-size:14px;color:var(--text-faded);}
 .library-controls i{color:var(--text-faded);margin-right:5px;}
 .track-list{list-style:none;padding:0;margin:0;}
@@ -84,14 +81,14 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);col
 .browsing-section.hidden{display:none;}
 .browsing-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:16px;}
 .grid-item{height:100px;border-radius:8px;background:linear-gradient(to bottom right, #4CAF50, #2E8B57);padding:10px;font-weight:700;font-size:16px;overflow:hidden;position:relative;}
-
 /* PLAYER CSS */
-.expanded-player{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%);z-index:100;display:flex;flex-direction:column;padding:0;box-sizing:border-box;transition:transform 0.3s cubic-bezier(0.33, 1, 0.68, 1),background 0.5s ease;transform:translateY(100%);}
+/* FIX: Player transition updated for smooth swipe-down */
+.expanded-player{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%);z-index:100;display:flex;flex-direction:column;padding:0;box-sizing:border-box;transition:transform var(--transition-premium),background 0.5s ease;transform:translateY(100%);}
 .expanded-player.is-dragging{transition:none;}
 .expanded-player.active{transform:translateY(0);}
 .player-content-wrapper{flex-grow:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;}
 .player-header,.player-details,.progress-container,.controls-row{padding-left:16px;padding-right:16px;width:100%;box-sizing:border-box;}
-.player-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-top:20px;position:sticky;top:0;z-index:50;background-color:transparent;transition:background-color 0.1s ease-in;}
+.player-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-top:20px;position:sticky;top:0;z-index:50;background-color:transparent;transition:background-color 0.3s ease;}
 .player-header i{font-size:24px;cursor:pointer;}
 .player-header .playlist-indicator{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--text-faded);}
 .player-art-container{display:flex;justify-content:center;align-items:center;padding-top:30px;padding-bottom:30px;padding-left:16px;padding-right:16px;}
@@ -102,18 +99,24 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);col
 .progress-container{margin-bottom:20px;}
 .time-stamps{display:flex;justify-content:space-between;font-size:12px;color:var(--text-faded);margin-top:5px;}
 .controls-row{display:flex;justify-content:space-around;align-items:center;font-size:24px;margin-bottom:20px;}
-.controls-row button{background:none;border:none;color:white;cursor:pointer;padding:10px;outline:none;}
+/* --- LIQUID GLASS: Control Buttons --- */
+.controls-row button{
+    background:none;border:none;color:white;cursor:pointer;padding:10px;outline:none;
+    transition: transform 0.1s ease, background-color 0.1s ease;border-radius: 50%;
+}
+.controls-row button:active {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(0.95);
+}
 .controls-row .main-play{font-size:72px;}
 input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:#535353;outline:none;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:white;cursor:pointer; visibility: visible;} 
 .like-animation { animation: pulse 0.3s ease-in-out; }
 @keyframes pulse { 0% { transform: scale(1.0); } 50% { transform: scale(1.2); } 100% { transform: scale(1.0); } }
-
 /* Artist Page Styles */
 .artist-banner-area{height:350px;position:relative;background-size:cover;background-position:center;background-repeat:no-repeat;display:flex;flex-direction:column;justify-content:flex-end;color:white;padding-left:16px;padding-right:16px;padding-bottom:10px;box-shadow:inset 0 -150px 70px -50px rgba(0,0,0,0.7);transition:background-image 0.5s ease;}
 .artist-details-overlay{padding-top:10px;padding-bottom:20px;display:flex;flex-direction:column;gap:5px;transition:opacity 0.2s ease-out;}
 .artist-details-overlay h2{font-size:32px;font-weight:700;margin:0;}
-/* Applying the old track list style to both popular tracks in expanded player and artist page tracks */
 #artistPopularTracks .track-item, .artist-page-track .track-item{ display:grid; grid-template-columns:25px 1fr 40px; gap:15px; padding:8px 16px; }
 #artistPopularTracks .track-item .track-img, .artist-page-track .track-item .track-img{display:none;} 
 .track-number{font-size:16px;color:var(--text-faded);display:flex;align-items:center;justify-content:center;}
@@ -121,15 +124,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 #artistPopularTracks .track-info p, .artist-page-track .track-info p{ font-size:13px; color:var(--text-faded); white-space: normal; overflow: visible; text-overflow: clip;}
 .track-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;}
 .track-controls i{color:var(--text-faded);font-size:18px;}
-/* Title style used in the artist page for "Popular" */
-.popular-title {
-    padding: 0 16px;
-    font-size: 20px;
-    font-weight: 700;
-    margin-top: 20px;
-    margin-bottom: 0;
-}
-
+.popular-title {padding: 0 16px;font-size: 20px;font-weight: 700;margin-top: 20px;margin-bottom: 0;}
 /* Liked Songs Card/Playlist */
 .liked-songs-card { display: flex; align-items: center; padding: 8px 16px; cursor: pointer; }
 .liked-icon-container { width: 50px; height: 50px; background: linear-gradient(135deg, #4A209B, #9C7CFD); border-radius: 4px; margin-right: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px;}
@@ -138,168 +133,93 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 .fixed-header-content { padding-top: 50px; background-color: var(--spotify-black); display: flex; align-items: flex-end; padding-bottom: 20px;}
 .liked-songs-image { width: 200px; height: 200px; background: linear-gradient(135deg, #4A209B, #9C7CFD); margin: 0 16px; box-shadow: 0 4px 60px rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; font-size: 96px;}
 .playlist-content-scroll-layer { position: relative; z-index: 1; background: var(--spotify-black); padding-top: 20px; min-height: 50vh; padding-bottom: 120px;}
-
-
 /* --- ARTIST TRACKS PAGE (Sticky Banner & Follow Button) --- */
 #tracksByArtistContainer {
-    /* The main scrollable container - must be fixed/full-screen */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow-y: scroll;
-    -webkit-overflow-scrolling: touch;
-    background: var(--spotify-black);
-    z-index: 5; 
-    padding-bottom: 60px; /* Space for the bottom nav */
+    position: fixed;top: 0;left: 0;width: 100%;height: 100%;overflow-y: scroll;-webkit-overflow-scrolling: touch;background: var(--spotify-black);z-index: 5; padding-bottom: 60px;
 }
-
-/* 1. The Sticky Header Wrapper */
-.artist-page-header-sticky {
-    position: sticky;
-    top: 0; /* Sticks to the top of the container */
-    z-index: 15; /* Above the scrolling tracks */
-    background: transparent; /* Start transparent, will become black on scroll */
+.artist-page-header-sticky {position: sticky;top: 0;z-index: 15;background: transparent;transition: background-color 0.3s ease;}
+#artistPageContent .artist-banner-area {height: 350px;box-shadow: inset 0 -150px 70px -50px rgba(0,0,0,0.7);transition: all 0.5s ease;}
+#artistPageContent .artist-details-overlay {transition: opacity 0.3s ease;}
+#artistPageContent .artist-details-overlay h2 {font-size: 32px;font-weight: 700;margin: 0;}
+.back-btn-top { 
+    position: absolute;top: 15px;left: 16px;z-index: 35;color: white;font-size: 24px;padding: 5px;cursor: pointer;
+    background: rgba(0,0,0,0.3); border-radius: 50%;
     transition: background-color 0.3s ease;
 }
-
-/* 2. Banner Area - Now only controls the visual banner part */
-#artistPageContent .artist-banner-area {
-    /* Make banner flexible for this separate page */
-    height: 350px;
-    box-shadow: inset 0 -150px 70px -50px rgba(0,0,0,0.7);
-    transition: all 0.5s ease;
-}
-#artistPageContent .artist-details-overlay {
-    /* Ensure H2 is visible */
-    transition: opacity 0.3s ease;
-}
-#artistPageContent .artist-details-overlay h2 {
-    font-size: 32px;
-    font-weight: 700;
-    margin: 0;
-}
-
-/* 3. Back Button (Fixed/Absolute positioning relative to the *scrolling* container) */
-.back-btn-top { 
-    position: absolute;
-    top: 15px;
-    left: 16px;
-    z-index: 35; 
-    color: white;
-    font-size: 24px;
-    padding: 5px;
-    cursor: pointer;
-    background: rgba(0,0,0,0.3); 
-    border-radius: 50%;
-}
-
-/* 4. Action Bar & Play Button (Now moves with the scrolling content) */
-/* REMOVED: margin-top: -30px; to ensure tracks scroll OVER the banner/header */
-.artist-action-bar {
-    display:flex; 
-    justify-content:flex-end; 
-    padding: 16px; 
-    position: relative; 
-    z-index: 10;
-}
+.artist-action-bar {display:flex; justify-content:flex-end; padding: 16px; position: relative; z-index: 10;}
+/* --- LIQUID GLASS: Artist Play Button --- */
 .artist-play-btn {
-    width: 56px; 
-    height: 56px; 
-    border-radius: 50%; 
-    background: var(--spotify-green); 
-    color: black; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    font-size: 24px; 
-    border: none; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4); 
-    cursor: pointer; 
-    position: absolute; /* Keep absolute position relative to action bar */
-    right: 16px; 
-    top: -28px; /* Lift button half its height over the content below it */
+    width: 56px; height: 56px; border-radius: 50%; background: var(--spotify-green); color: black; 
+    display: flex; justify-content: center; align-items: center; font-size: 24px; border: none; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: pointer; position: absolute; right: 16px; top: -28px; 
+    transition: transform 0.1s ease;
 }
-/* REMOVED: .artist-other-controls - as per request to remove the 'Follow' button */
-.artist-other-controls {
-    display:flex; 
-    align-items:center; 
-    gap: 15px; 
-    margin-right: auto; 
-    padding-top: 10px;
-}
+.artist-play-btn:active {transform: scale(0.95);}
+.artist-other-controls {display:flex; align-items:center; gap: 15px; margin-right: auto; padding-top: 10px;}
 .artist-other-controls button {
-    padding: 6px 18px;
-    border: 1px solid #b3b3b3; /* Faded border */
-    border-radius: 4px;
-    background: transparent;
-    color: white;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
+    padding: 6px 18px;border: 1px solid #b3b3b3; border-radius: 4px;background: transparent;
+    color: white;font-size: 12px;font-weight: 700;cursor: pointer;
 }
-
-
-/* 5. The Second, Sticky Follow Button - Always visible when scrolled */
-/* Removing sticky-follow-btn CSS as the button element will be removed in JS */
-.sticky-follow-btn {
-    /* Initially hidden */
-    opacity: 0;
-    pointer-events: none;
-    position: absolute;
-    top: 55px; /* Adjust based on back button/header height */
-    left: 16px;
-    padding: 10px 30px;
-    border: 1px solid white;
-    border-radius: 25px;
-    color: white;
-    background: none;
-    font-weight: 700;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-size: 14px;
-    transition: opacity 0.2s ease-in-out, border-color 0.2s ease;
-}
-.sticky-follow-btn.show {
-    opacity: 1;
-    pointer-events: auto;
-}
-
 /* Mini Player & Nav */
-.mini-player{position:fixed;bottom:60px;left:5px;right:5px;height:55px;background:#404040;border-radius:8px;display:flex;align-items:center;padding:0 10px;z-index:50;cursor:pointer;transform:translateY(100%);transition:transform 0.3s ease-in-out;box-shadow:0 -2px 10px rgba(0,0,0,0.5);}
+/* --- LIQUID GLASS: Mini Player (FIXED: Dynamic color ready) --- */
+.mini-player{
+    position:fixed;bottom:60px;left:5px;right:5px;height:60px; /* Increased height for premium feel */
+    border-radius:15px; /* Larger radius for liquid look */
+    display:flex;align-items:center;padding:0 12px;z-index:50;cursor:pointer;
+    transform:translateY(100%);
+    transition:transform var(--transition-premium); /* Uses premium curve */
+    /* Dynamic Glass Effect - Background color will be set by JS based on album art */
+    background: rgba(40, 40, 40, 0.4); 
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    box-shadow:0 8px 30px rgba(0,0,0,0.3); 
+    border: 1px solid var(--glass-border-color);
+}
 .mini-player.active{transform:translateY(0);}
 .mini-track-info{flex-grow:1;padding:0 10px;}
 .mini-track-info h4{margin:0;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .mini-track-info p{margin:0;font-size:12px;color:var(--text-faded);}
-.mini-controls button{background:none;border:none;color:white;font-size:24px;cursor:pointer;padding:0 5px;}
-.footer-nav{position:fixed;bottom:0;left:0;width:100%;height:60px;background:rgba(18, 18, 18, 0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;justify-content:space-around;align-items:center;z-index:55;padding-bottom:env(safe-area-inset-bottom);}
+.mini-controls button{
+    background:none;border:none;color:white;font-size:24px;cursor:pointer;padding:0 5px;
+    transition: transform 0.1s ease;
+}
+.mini-controls button:active {transform: scale(0.95);}
+/* --- LIQUID GLASS: Footer Nav Bar (New) --- */
+.footer-nav{
+    position:fixed;bottom:0;left:0;width:100%;height:60px;
+    /* Premium Glass Effect */
+    background: rgba(18, 18, 18, 0.65); /* Darker glass base */
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    display:flex;justify-content:space-around;align-items:center;z-index:55;
+    padding-bottom:env(safe-area-inset-bottom);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
 .nav-item{color:var(--text-faded);display:flex;flex-direction:column;align-items:center;font-size:12px;padding-top:5px;cursor:pointer;}
 .nav-item.active{color:white;}
-
 /* FLAC/MP3 Switch Button (New UI) */
+/* --- LIQUID GLASS: Format Switch Button --- */
 #formatSwitchBtn {
     --button-size: 50px;
     position: fixed; bottom: 120px; right: 15px; /* Default position */
     width: var(--button-size); height: var(--button-size);
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1); 
-    backdrop-filter: blur(10px) brightness(1.2); 
-    -webkit-backdrop-filter: blur(10px) brightness(1.2);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(var(--glass-blur)) brightness(1.2); 
+    -webkit-backdrop-filter: blur(var(--glass-blur)) brightness(1.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass-border-color);
     color: white;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
     font-size: 10px; font-weight: 700;
     z-index: 60; cursor: pointer;
-    transition: transform 0.2s ease-out, background 0.3s ease;
+    transition: transform 0.2s ease-out, background 0.3s ease, top 0s, left 0s, right 0s, bottom 0s; /* Position changes must be instant during drag */
 }
-#formatSwitchBtn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
+#formatSwitchBtn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.25); }
 #formatSwitchBtn.format-mp3 { color: #ffcc00; } 
 #formatSwitchBtn.format-flac { color: var(--spotify-green); }
 @keyframes switch-anim { 0% { transform: rotateY(0deg); opacity: 1; } 50% { transform: rotateY(90deg); opacity: 0; } 100% { transform: rotateY(0deg); opacity: 1; } }
 .switching-animation { animation: switch-anim 0.4s ease-in-out; }
-
 /* Preloader/Spinner */
 #preLoader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--spotify-black); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; transition: opacity 0.5s ease; }
 .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--spotify-green); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
@@ -309,98 +229,33 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 </head>
 <body>
 
-<div id="preLoader">
-    <div class="spinner"></div>
-    <p>Totify is loading your music...</p>
-</div>
+<div id="preLoader"><div class="spinner"></div><p>Totify is loading your music...</p></div>
 
 <audio id="mainAudio" preload="auto"></audio> 
 
 <div class="main-content">
-    <div class="app-page" id="homePage">
-        <div class="library-header"><span style="font-size: 30px;">👋 Hello!</span></div>
-        <h2 style="padding: 0 16px;">It's New Music Friday!</h2>
-        <div style="height: 300px; background: #282828; margin: 16px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
-            <p>Home Feed Content Placeholder</p>
-        </div>
-    </div>
-    <div class="app-page" id="searchPage">
-        <div class="search-header">
-            <span class="title">Search</span>
-            <i class="fas fa-camera"></i>
-        </div>
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="What do you want to listen to?">
-        </div>
-        <ul class="track-list" id="searchResultsContainer"></ul>
-        <div class="browsing-section" id="browsingSection">
-            <h3 class="start-browsing">Start browsing</h3>
-            <div class="browsing-grid">
-                <div class="grid-item" style="background:linear-gradient(to bottom right, #AA1445, #E93F6A);">Music</div>
-                <div class="grid-item" style="background:linear-gradient(to bottom right, #1E8145, #38A169);">Podcasts</div>
-                <div class="grid-item" style="background:linear-gradient(to bottom right, #800080, #A020F0);">Live Events</div>
-                <div class="grid-item" style="background:linear-gradient(to bottom right, #005A9C, #0080C0);">Home of I-Pop</div>
-            </div>
-            <h3 class="start-browsing">Discover something new</h3>
-            <div style="height: 200px; background: #282828; margin: 16px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
-                <p>Discovery Carousel Placeholder</p>
-            </div>
-        </div>
-    </div>
-    <div class="app-page active" id="libraryPage">
-        <div class="library-header" id="mainLibHeader">
-            <span class="title">Your Library</span>
-            <div><i class="fas fa-search" id="librarySearchIcon" style="margin-right: 20px; cursor: pointer;"></i><i class="fas fa-plus" style="cursor: pointer;"></i></div>
-        </div>
-        <div class="library-filter-tabs" id="mainLibTabs">
-            <div class="filter-tab active" data-content="playlists">Playlists</div>
-            <div class="filter-tab" data-content="artists">Artists</div>
-        </div>
-        <div class="library-controls" id="libraryControls">
-            <div style="display:flex; align-items:center;">
-                <i class="fas fa-arrow-up"></i>
-                <i class="fas fa-arrow-down" style="margin-right: 15px;"></i>
-                <span>Recents</span>
-            </div>
-            <i class="fas fa-th-large" style="margin-right: 0;"></i> </div>
-        <ul class="track-list" id="musicContainer">
-            <div style="height: 100px; display: flex; justify-content: center; align-items: center; color: var(--text-faded);">
-                <p>Loading Music...</p>
-            </div>
-        </ul>
-        <ul class="track-list" id="artistContainer" style="display:none;"></ul>
-        <div id="tracksByArtistContainer" style="display:none;"></div>
-        <div id="likedSongsPlaylistContainer" style="display:none;"></div>
-    </div>
+    <div class="app-page" id="homePage"><div class="library-header"><span style="font-size: 30px;">👋 Hello!</span></div><h2 style="padding: 0 16px;">It's New Music Friday!</h2><div style="height: 300px; background: #282828; margin: 16px; border-radius: 8px; display: flex; justify-content: center; align-items: center;"><p>Home Feed Content Placeholder</p></div></div>
+    <div class="app-page" id="searchPage"><div class="search-header"><span class="title">Search</span><i class="fas fa-camera"></i></div><div class="search-bar"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="What do you want to listen to?"></div><ul class="track-list" id="searchResultsContainer"></ul><div class="browsing-section" id="browsingSection"><h3 class="start-browsing">Start browsing</h3><div class="browsing-grid"><div class="grid-item" style="background:linear-gradient(to bottom right, #AA1445, #E93F6A);">Music</div><div class="grid-item" style="background:linear-gradient(to bottom right, #1E8145, #38A169);">Podcasts</div><div class="grid-item" style="background:linear-gradient(to bottom right, #800080, #A020F0);">Live Events</div><div class="grid-item" style="background:linear-gradient(to bottom right, #005A9C, #0080C0);">Home of I-Pop</div></div><h3 class="start-browsing">Discover something new</h3><div style="height: 200px; background: #282828; margin: 16px; border-radius: 8px; display: flex; justify-content: center; align-items: center;"><p>Discovery Carousel Placeholder</p></div></div></div>
+    <div class="app-page active" id="libraryPage"><div class="library-header" id="mainLibHeader"><span class="title">Your Library</span><div><i class="fas fa-search" id="librarySearchIcon" style="margin-right: 20px; cursor: pointer;"></i><i class="fas fa-plus" style="cursor: pointer;"></i></div></div><div class="library-filter-tabs" id="mainLibTabs"><div class="filter-tab active" data-content="playlists">Playlists</div><div class="filter-tab" data-content="artists">Artists</div></div><div class="library-controls" id="libraryControls"><div style="display:flex; align-items:center;"><i class="fas fa-arrow-up"></i><i class="fas fa-arrow-down" style="margin-right: 15px;"></i><span>Recents</span></div><i class="fas fa-th-large" style="margin-right: 0;"></i> </div><ul class="track-list" id="musicContainer"><div style="height: 100px; display: flex; justify-content: center; align-items: center; color: var(--text-faded);"><p>Loading Music...</p></div></ul><ul class="track-list" id="artistContainer" style="display:none;"></div><div id="tracksByArtistContainer" style="display:none;"></div><div id="likedSongsPlaylistContainer" style="display:none;"></div></div>
 </div>
 
 <div class="expanded-player" id="expandedPlayer">
     <div class="player-content-wrapper">
         <div class="player-header">
             <i class="fas fa-chevron-down" id="minimizeBtn"></i>
-            <div class="playlist-indicator">
-                PLAYING<br>
-                <span id="playerTitleSmall" style="color:white; font-size:14px;"></span>
-            </div>
+            <div class="playlist-indicator">PLAYING<br><span id="playerTitleSmall" style="color:white; font-size:14px;"></span></div>
             <i class="fas fa-ellipsis-v"></i>
         </div>
         <div class="player-art-container">
             <img class="player-art" id="playerArt" src="" alt="Album Art">
         </div>
         <div class="player-details">
-            <div>
-                <h2 id="playerTrackTitle"></h2>
-                <p id="playerArtistName"></p>
-            </div>
+            <div><h2 id="playerTrackTitle"></h2><p id="playerArtistName"></p></div>
             <i class="far fa-heart" id="likeBtn" style="color:white; font-size:24px; cursor:pointer;"></i>
         </div>
         <div class="progress-container">
             <input type="range" id="playerProgress" min="0" max="100" value="0">
-            <div class="time-stamps">
-                <span id="currentTime">0:00</span>
-                <span id="totalTime">0:00</span>
-            </div>
+            <div class="time-stamps"><span id="currentTime">0:00</span><span id="totalTime">0:00</span></div>
         </div>
         <div class="controls-row">
             <button id="shuffleBtn"><i class="fas fa-random"></i></button>
@@ -427,14 +282,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
             </div>
             <h3 class="popular-title" style="padding:16px;font-size:20px;font-weight:700;margin-top:20px;margin-bottom:0;">Popular</h3>
             <ul class="track-list" id="artistPopularTracks"></ul>
-            <div class="artist-pick-section">
-                <h3 class="popular-title" style="padding:16px;font-size:20px;font-weight:700;margin-top:20px;margin-bottom:0;">Artist Pick</h3>
-                <div style="padding: 0 16px;">
-                    <div style="height: 100px; background: #282828; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: var(--text-faded);">
-                        <p>Artist Pick Playlist Placeholder</p>
-                    </div>
-                </div>
-            </div>
+            <div class="artist-pick-section"><h3 class="popular-title" style="padding:16px;font-size:20px;font-weight:700;margin-top:20px;margin-bottom:0;">Artist Pick</h3><div style="padding: 0 16px;"><div style="height: 100px; background: #282828; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: var(--text-faded);"><p>Artist Pick Playlist Placeholder</p></div></div></div>
             <div style="height: 100px;"></div> 
         </div>
     </div>
@@ -442,13 +290,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 
 <div class="mini-player" id="miniPlayer">
     <img id="miniArt" src="" alt="Album Art" class="track-img" style="width: 40px; height: 40px; border-radius: 2px;">
-    <div class="mini-track-info">
-        <h4 id="miniTitle"></h4>
-        <p id="miniArtist"></p>
-    </div>
-    <div class="mini-controls">
-        <button id="miniPlayBtn"><i class="fas fa-play"></i></button>
-    </div>
+    <div class="mini-track-info"><h4 id="miniTitle"></h4><p id="miniArtist"></p></div>
+    <div class="mini-controls"><button id="miniPlayBtn"><i class="fas fa-play"></i></button></div>
 </div>
 
 <div id="formatSwitchBtn" class="format-flac">
@@ -457,79 +300,43 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 </div>
 
 <div class="footer-nav">
-    <div class="nav-item" data-page="homePage">
-        <i class="fas fa-home"></i>
-        <span>Home</span>
-    </div>
-    <div class="nav-item" data-page="searchPage">
-        <i class="fas fa-search"></i>
-        <span>Search</span>
-    </div>
-    <div class="nav-item active" data-page="libraryPage">
-        <i class="fas fa-book"></i>
-        <span>Your Library</span>
-    </div>
-    <div class="nav-item">
-        <i class="fab fa-spotify"></i>
-        <span>Premium</span>
-    </div>
+    <div class="nav-item" data-page="homePage"><i class="fas fa-home"></i><span>Home</span></div>
+    <div class="nav-item" data-page="searchPage"><i class="fas fa-search"></i><span>Search</span></div>
+    <div class="nav-item active" data-page="libraryPage"><i class="fas fa-book"></i><span>Your Library</span></div>
+    <div class="nav-item"><i class="fab fa-spotify"></i><span>Premium</span></div>
 </div>
-
 <script type="module">
-// START JAVASCRIPT LOGIC (FINAL PERFECTED)
-
+// START JAVASCRIPT LOGIC (FIXED COLOR, NOTIFICATION & NAVIGATION)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
-    apiKey: "AIzaSyC9rehsf-0jkb9dAeT1-0Z1C-yRJ0YI9dA",
-    authDomain: "gymnm-ce84b.firebaseapp.com",
-    projectId: "gymnm-ce84b",
-    storageBucket: "gymnm-ce84b.appspot.com",
-    messagingSenderId: "474926929394",
-    appId: "1:474926929394:web:6abdb807caba2751a5c76b",
+    apiKey: "AIzaSyC9rehsf-0jkb9dAeT1-0Z1C-yRJ0YI9dA", authDomain: "gymnm-ce84b.firebaseapp.com", projectId: "gymnm-ce84b",
+    storageBucket: "gymnm-ce84b.appspot.com", messagingSenderId: "474926929394", appId: "1:474926929394:web:6abdb807caba2751a5c76b",
     measurementId: "G-6R9S8LYZNF"
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Global State
-let allTracks = [];
-let allArtists = new Map();
-let currentTrackIndex = -1; 
-const currentAudio = document.getElementById('mainAudio'); 
-let isPlaying = false;   
-let isLoading = false;
-let likedTrackIndexes = {}; 
-let trackPlayCounts = {}; 
+let allTracks = []; let allArtists = new Map(); let currentTrackIndex = -1; 
+const currentAudio = document.getElementById('mainAudio'); let isPlaying = false;   
+let isLoading = false; let likedTrackIndexes = {}; let trackPlayCounts = {}; 
 let currentFormat = localStorage.getItem('totify_audio_format') || 'flac'; 
 
 // DOM Elements
-const musicContainer = document.getElementById('musicContainer');
-const artistContainer = document.getElementById('artistContainer');
-const tracksByArtistContainer = document.getElementById('tracksByArtistContainer');
-const likedSongsPlaylistContainer = document.getElementById('likedSongsPlaylistContainer');
-const artistPopularTracksContainer = document.getElementById('artistPopularTracks'); 
-const filterTabs = document.querySelectorAll('.library-filter-tabs .filter-tab');
-const libraryControls = document.getElementById('libraryControls');
-const expandedPlayer = document.getElementById('expandedPlayer');
-const miniPlayer = document.getElementById('miniPlayer');
-const mainPlayBtn = document.getElementById('mainPlayBtn');
-const miniPlayBtn = document.getElementById('miniPlayBtn');
-const footerNavItems = document.querySelectorAll('.nav-item');
-const searchInput = document.getElementById('searchInput');
-const searchResultsContainer = document.getElementById('searchResultsContainer');
-const browsingSection = document.getElementById('browsingSection');
-const scrollContentWrapper = document.querySelector('.player-content-wrapper');
-const playerArt = document.getElementById('playerArt');
-const playerHeader = document.querySelector('.player-header');
-const playerProgress = document.getElementById('playerProgress');
-const currentTimeDisplay = document.getElementById('currentTime');
-const totalTimeDisplay = document.getElementById('totalTime');
-const mainLibHeader = document.getElementById('mainLibHeader');
-const mainLibTabs = document.getElementById('mainLibTabs');
-const likeBtn = document.getElementById('likeBtn'); 
+const musicContainer = document.getElementById('musicContainer'); const artistContainer = document.getElementById('artistContainer');
+const tracksByArtistContainer = document.getElementById('tracksByArtistContainer'); const likedSongsPlaylistContainer = document.getElementById('likedSongsPlaylistContainer');
+const artistPopularTracksContainer = document.getElementById('artistPopularTracks'); const filterTabs = document.querySelectorAll('.library-filter-tabs .filter-tab');
+const libraryControls = document.getElementById('libraryControls'); const expandedPlayer = document.getElementById('expandedPlayer');
+const miniPlayer = document.getElementById('miniPlayer'); const mainPlayBtn = document.getElementById('mainPlayBtn');
+const miniPlayBtn = document.getElementById('miniPlayBtn'); const footerNavItems = document.querySelectorAll('.nav-item');
+const searchInput = document.getElementById('searchInput'); const searchResultsContainer = document.getElementById('searchResultsContainer');
+const browsingSection = document.getElementById('browsingSection'); const scrollContentWrapper = document.querySelector('.player-content-wrapper');
+const playerArt = document.getElementById('playerArt'); const playerHeader = document.querySelector('.player-header');
+const playerProgress = document.getElementById('playerProgress'); const currentTimeDisplay = document.getElementById('currentTime');
+const totalTimeDisplay = document.getElementById('totalTime'); const mainLibHeader = document.getElementById('mainLibHeader');
+const mainLibTabs = document.getElementById('mainLibTabs'); const likeBtn = document.getElementById('likeBtn'); 
 const formatSwitchBtn = document.getElementById('formatSwitchBtn');
 
 // --- PWA SERVICE WORKER REGISTRATION ---
@@ -537,6 +344,33 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(e => console.error('SW failed:', e));
   });
+}
+
+// --- FIXED DYNAMIC COLOR EXTRACTION ---
+function updateDynamicColors(imgElement) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 10; canvas.height = 10;
+    
+    // Sample the center area of the image to get a true dominant color (avoiding green borders/defaults)
+    ctx.drawImage(imgElement, imgElement.width / 4, imgElement.height / 4, imgElement.width / 2, imgElement.height / 2, 0, 0, 10, 10);
+    const data = ctx.getImageData(0, 0, 10, 10).data;
+    
+    let r = 0, g = 0, b = 0;
+    for (let i = 0; i < data.length; i += 4) {
+        r += data[i]; g += data[i+1]; b += data[i+2];
+    }
+    r = Math.floor(r / (data.length / 4));
+    g = Math.floor(g / (data.length / 4));
+    b = Math.floor(b / (data.length / 4));
+
+    const vibrantColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
+    const glassColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
+    
+    miniPlayer.style.backgroundColor = glassColor;
+    expandedPlayer.style.transition = "background 0.5s ease";
+    expandedPlayer.style.background = `linear-gradient(to bottom, ${vibrantColor} 0%, #000 100%)`;
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', `rgb(${r}, ${g}, ${b})`);
 }
 
 // --- UTILITY & STATE FUNCTIONS ---
@@ -556,47 +390,38 @@ function saveLikedData() {
         localStorage.setItem('totify_liked_tracks', JSON.stringify(likedTrackIndexes));
     } catch (e) { console.error("Error saving liked data:", e); }
 }
-function getArrayIndexOfTrack(trackIndex) {
-    return allTracks.findIndex(t => t.index === trackIndex);
-}
+function getArrayIndexOfTrack(trackIndex) { return allTracks.findIndex(t => t.index === trackIndex); }
 function formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 }
+
 function updatePlayButtonUI(state) {
     let icon;
     if (state === "loading") {
-        icon = '<div class="spinner small-spinner"></div>';
-        isLoading = true;
+        icon = '<div class="spinner small-spinner"></div>'; isLoading = true;
     } else {
-        icon = state === "play" ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
-        isLoading = false;
+        icon = state === "play" ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>'; isLoading = false;
     }
-    mainPlayBtn.innerHTML = icon;
-    miniPlayBtn.innerHTML = icon;
-    mainPlayBtn.disabled = isLoading;
-    miniPlayBtn.disabled = isLoading;
-    document.getElementById('nextBtn').disabled = isLoading;
+    mainPlayBtn.innerHTML = icon; miniPlayBtn.innerHTML = icon; mainPlayBtn.disabled = isLoading;
+    miniPlayBtn.disabled = isLoading; document.getElementById('nextBtn').disabled = isLoading;
     document.getElementById('prevBtn').disabled = isLoading;
-
     if ("mediaSession" in navigator && state !== "loading") {
         navigator.mediaSession.playbackState = state === "play" ? "paused" : "playing";
     }
 }
+
 function updateLikeButtonUI(trackIndex) {
     const isLiked = !!likedTrackIndexes[trackIndex];
     if (isLiked) {
-        likeBtn.classList.remove('far');
-        likeBtn.classList.add('fas');
-        likeBtn.style.color = 'var(--spotify-green)';
+        likeBtn.classList.remove('far'); likeBtn.classList.add('fas'); likeBtn.style.color = 'var(--spotify-green)';
     } else {
-        likeBtn.classList.remove('fas');
-        likeBtn.classList.add('far');
-        likeBtn.style.color = 'white';
+        likeBtn.classList.remove('fas'); likeBtn.classList.add('far'); likeBtn.style.color = 'white';
     }
 }
+
 function updatePlaylistView() {
     const containers = [musicContainer, searchResultsContainer, tracksByArtistContainer, likedSongsPlaylistContainer, artistPopularTracksContainer];
     containers.forEach(container => {
@@ -605,92 +430,79 @@ function updatePlaylistView() {
             const index = parseInt(item.dataset.index);
             const isCurrentTrack = index === currentTrackIndex;
             item.classList.remove('playing');
-            if (isCurrentTrack && isPlaying) {
-                item.classList.add('playing');
-            }
+            if (isCurrentTrack && isPlaying) { item.classList.add('playing'); }
         });
     });
 }
+
+// --- FIXED NOTIFICATION TIMING ---
 function updateMediaNotification() {
     const currentTrack = allTracks.find(t => t.index === currentTrackIndex);
     if (!currentTrack) return;
     const notificationImage = currentTrack.image_base64 || "s512.png"; 
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
-            title: currentTrack.title,      
-            artist: currentTrack.artists.join(', '),    
+            title: currentTrack.title, artist: currentTrack.artists.join(', '),    
             album: currentTrack.album || 'Totify', 
             artwork: [ { src: notificationImage, sizes: '512x512', type: 'image/jpeg' } ]
         });
+        
+        // FIX: Explicitly update position state for correct timing
         if ("setPositionState" in navigator.mediaSession) {
              navigator.mediaSession.setPositionState({
                  duration: currentAudio.duration || 0,
                  playbackRate: currentAudio.playbackRate || 1,
-                 position: currentAudio.currentTime
+                 position: currentAudio.currentTime || 0
              });
         }
     }
 }
+
 function updateMediaSession() {
     if (!("mediaSession" in navigator)) return;
     navigator.mediaSession.setActionHandler("play", togglePlayPause);
     navigator.mediaSession.setActionHandler("pause", togglePlayPause);
     navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
     navigator.mediaSession.setActionHandler("previoustrack", prevTrack);
-    // Ensure handlers for seek operations are defined for better control
     navigator.mediaSession.setActionHandler("seekto", (details) => {
         if (details.seekTime !== undefined) {
-             currentAudio.currentTime = details.seekTime;
+             currentAudio.currentTime = details.seekTime; 
              updateMediaNotification();
         }
     });
     updateMediaNotification();
 }
+
 function incrementPlayCount(trackIndex) {
     if (trackIndex === -1) return;
     trackPlayCounts[trackIndex] = (trackPlayCounts[trackIndex] || 0) + 1;
 }
 
-
 // --- FLAC/MP3 SWITCH LOGIC ---
 const BTN_POSITION_KEY = 'totify_btn_position';
 let isBtnDragging = false; 
-
 function updateFormatButtonUI(format) {
     const textElement = formatSwitchBtn.querySelector('.icon-text');
     const iconElement = formatSwitchBtn.querySelector('i');
     formatSwitchBtn.classList.remove('format-flac', 'format-mp3');
     if (format === 'flac') {
-        formatSwitchBtn.classList.add('format-flac');
-        textElement.textContent = 'FLAC';
-        iconElement.className = 'fas fa-wave-square';
+        formatSwitchBtn.classList.add('format-flac'); textElement.textContent = 'FLAC'; iconElement.className = 'fas fa-wave-square';
     } else {
-        formatSwitchBtn.classList.add('format-mp3');
-        textElement.textContent = 'MP3';
-        iconElement.className = 'fas fa-wifi';
+        formatSwitchBtn.classList.add('format-mp3'); textElement.textContent = 'MP3'; iconElement.className = 'fas fa-wifi';
     }
 }
-
 function switchAudioFormat() {
     if (isBtnDragging || isLoading) return;
     const newFormat = currentFormat === 'flac' ? 'mp3' : 'flac';
     formatSwitchBtn.classList.add('switching-animation');
     formatSwitchBtn.addEventListener('animationend', () => formatSwitchBtn.classList.remove('switching-animation'), { once: true });
-    
-    currentFormat = newFormat;
-    localStorage.setItem('totify_audio_format', newFormat);
+    currentFormat = newFormat; localStorage.setItem('totify_audio_format', newFormat);
     updateFormatButtonUI(newFormat);
-    
-    // Auto-reload the current track if playing
     if (currentTrackIndex !== -1) {
-        const currentTime = currentAudio.currentTime;
-        const wasPlaying = isPlaying;
-        currentAudio.pause(); 
-        loadTrack(currentTrackIndex, wasPlaying, currentTime);
+        const currentTime = currentAudio.currentTime; const wasPlaying = isPlaying;
+        currentAudio.pause(); loadTrack(currentTrackIndex, wasPlaying, currentTime);
     }
 }
-
-// Button Drag Logic
 function loadButtonPosition() {
     const savedPos = localStorage.getItem(BTN_POSITION_KEY);
     if (savedPos) {
@@ -703,24 +515,26 @@ function saveButtonPosition() {
     const rect = formatSwitchBtn.getBoundingClientRect();
     localStorage.setItem(BTN_POSITION_KEY, JSON.stringify({ x: `${rect.left}px`, y: `${rect.top}px` }));
 }
+
 let dragStartX, dragStartY, initialLeft, initialTop;
+const DRAG_TOLERANCE = 5;
+
 formatSwitchBtn.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
         isBtnDragging = false; dragStartX = e.touches[0].clientX; dragStartY = e.touches[0].clientY;
-        const cs = window.getComputedStyle(formatSwitchBtn);
-        initialLeft = parseFloat(cs.left) || formatSwitchBtn.offsetLeft;
-        initialTop = parseFloat(cs.top) || formatSwitchBtn.offsetTop;
+        initialLeft = formatSwitchBtn.getBoundingClientRect().left; 
+        initialTop = formatSwitchBtn.getBoundingClientRect().top;
         formatSwitchBtn.style.transition = 'none';
         document.addEventListener('touchmove', onTouchMove, { passive: false });
         document.addEventListener('touchend', onTouchEnd);
     }
-});
+}, { passive: true });
 function onTouchMove(e) {
     if (e.touches.length === 1) {
-        const deltaX = e.touches[0].clientX - dragStartX;
-        const deltaY = e.touches[0].clientY - dragStartY;
-        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-            isBtnDragging = true; e.preventDefault();
+        const deltaX = e.touches[0].clientX - dragStartX; const deltaY = e.touches[0].clientY - dragStartY;
+        if (!isBtnDragging && (Math.abs(deltaX) > DRAG_TOLERANCE || Math.abs(deltaY) > DRAG_TOLERANCE)) { isBtnDragging = true; }
+        if (isBtnDragging) {
+            e.preventDefault();
             let newX = initialLeft + deltaX; let newY = initialTop + deltaY;
             newX = Math.max(0, Math.min(newX, window.innerWidth - formatSwitchBtn.offsetWidth));
             newY = Math.max(0, Math.min(newY, window.innerHeight - formatSwitchBtn.offsetHeight));
@@ -731,61 +545,47 @@ function onTouchMove(e) {
 }
 function onTouchEnd(e) {
     document.removeEventListener('touchmove', onTouchMove); document.removeEventListener('touchend', onTouchEnd);
-    formatSwitchBtn.style.transition = 'transform 0.2s ease-out, background 0.3s ease';
-    if (isBtnDragging) { saveButtonPosition(); e.preventDefault(); } 
+    formatSwitchBtn.style.transition = 'transform 0.2s ease-out, background 0.3s ease, top 0.3s ease, left 0.3s ease, right 0.3s ease, bottom 0.3s ease';
+    if (isBtnDragging) { 
+        saveButtonPosition(); 
+        const clickPreventionHandler = (evt) => {
+            evt.stopPropagation();
+            formatSwitchBtn.removeEventListener('click', clickPreventionHandler, true);
+        };
+        formatSwitchBtn.addEventListener('click', clickPreventionHandler, true);
+    } 
     isBtnDragging = false;
 }
 window.addEventListener('load', loadButtonPosition);
 formatSwitchBtn.addEventListener('click', switchAudioFormat);
 updateFormatButtonUI(currentFormat);
 
-
 // --- CORE PLAYBACK LOGIC ---
-
-// Optimized loadTrack function with format switching and seek time
 async function loadTrack(index, autoPlay = true, seekTime = 0) {
-    const track = allTracks.find(t => t.index === index);
-    if (!track) return;
-    
-    // 1. Determine Source URL (Core Logic Fix)
-    let sourceUrl = "";
-    const wasFLACMode = currentFormat === 'flac';
-    
-    if (wasFLACMode) {
-        sourceUrl = track.flac_url || track.mp3_url; // Try FLAC, fallback to MP3
-    } else {
-        sourceUrl = track.mp3_url || track.flac_url; // Try MP3, fallback to FLAC
-    }
+    const track = allTracks.find(t => t.index === index); if (!track) return;
+    let sourceUrl = ""; const wasFLACMode = currentFormat === 'flac';
+    if (wasFLACMode) { sourceUrl = track.flac_url || track.mp3_url; } else { sourceUrl = track.mp3_url || track.flac_url; }
+    if (!sourceUrl) return;
 
-    if (!sourceUrl) { 
-        console.error("No audio URL found for track:", track.title); 
-        return; 
-    }
-    
-    // 2. Initial state reset
-    if (isPlaying) currentAudio.pause();
-    isPlaying = false; 
-    currentTrackIndex = index;
-
-    // 3. UI Update for instantaneous feedback
-    const imageSource = track.image_base64 || "s512.png";
+    if (isPlaying) currentAudio.pause(); isPlaying = false; currentTrackIndex = index;
+    const imageSource = track.image_base64 || "s512.png"; 
     const fullArtistList = track.artists.join(', ');    
-    const primaryArtist = track.primaryArtist;          
+    const primaryArtist = track.primaryArtist; 
     const artistData = allArtists.get(primaryArtist.toLowerCase());
     const artistImageSource = artistData ? artistData.image_base64_highres || artistData.image_base64 : ''; 
-
+    
     playerArt.src = imageSource;
-    // BUG FIX: Ensure correct artist list is used in player details
+    // MATCH COLOR ON LOAD
+    playerArt.onload = () => updateDynamicColors(playerArt);
+
     document.getElementById('playerTrackTitle').textContent = track.title;
     document.getElementById('playerArtistName').textContent = fullArtistList; 
     document.getElementById('playerTitleSmall').textContent = track.title;
-    
     document.getElementById('miniArt').src = imageSource;
     document.getElementById('miniTitle').textContent = track.title;
     document.getElementById('miniArtist').textContent = fullArtistList;
     miniPlayer.classList.add('active'); 
 
-    // Update expanded player artist info
     document.getElementById('expandedArtistName').innerHTML = `${primaryArtist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
     const artistBannerArea = document.getElementById('artistBannerArea');
     if (artistImageSource) {
@@ -795,140 +595,70 @@ async function loadTrack(index, autoPlay = true, seekTime = 0) {
          artistBannerArea.style.backgroundImage = 'none';
          artistBannerArea.style.backgroundColor = '#303030';
     }
-    
+
     renderExpandedPlayerPopularTracks(primaryArtist); 
-    
-    playerProgress.value = 0;
+    playerProgress.value = 0; 
     currentTimeDisplay.textContent = formatTime(seekTime);
     totalTimeDisplay.textContent = formatTime(track.duration || 0); 
-    updateMediaSession();
-    updateLikeButtonUI(index); 
-    updatePlaylistView();
     
-    // 4. Load Audio and Handle Playback
-    currentAudio.src = sourceUrl; 
-    currentAudio.load(); 
-    currentAudio.currentTime = seekTime; // Optimization: Apply seek time immediately
-
-    // NEW: Robust Audio Error Fallback
-    currentAudio.onerror = () => {
-        console.warn(`Audio Error for ${track.title} in ${currentFormat} mode. Attempting fallback...`);
-        const failedSrc = currentAudio.src;
-        
-        let newSource = '';
-        let newMode = currentFormat; 
-
-        if (currentFormat === 'flac' && track.mp3_url && failedSrc !== track.mp3_url) {
-            newSource = track.mp3_url;
-            newMode = 'mp3';
-            console.warn("Fallback: FLAC failed, switching to MP3.");
-        } else if (currentFormat === 'mp3' && track.flac_url && failedSrc !== track.flac_url) {
-            newSource = track.flac_url;
-            newMode = 'flac';
-            console.warn("Fallback: MP3 failed, switching to FLAC.");
-        }
-
-        if (newSource) {
-            // Update global state and UI to reflect the successful fallback format
-            currentFormat = newMode;
-            localStorage.setItem('totify_audio_format', newMode);
-            updateFormatButtonUI(newMode);
-
-            currentAudio.src = newSource;
-            currentAudio.currentTime = seekTime;
-            if(autoPlay) currentAudio.play();
-        } else {
-             console.error("Critical: No working audio source found for track.");
-             updatePlayButtonUI("play");
-        }
-    };
-
-
+    updateMediaSession(); updateLikeButtonUI(index); updatePlaylistView();
+    currentAudio.src = sourceUrl; currentAudio.load(); currentAudio.currentTime = seekTime; 
+    
     if (autoPlay) {
-        updatePlayButtonUI("loading");
+        updatePlayButtonUI("loading"); 
         document.getElementById('expandedPlayer').classList.add('active'); 
         document.body.classList.add('lock-scroll'); 
         expandedPlayer.style.transform = ''; 
         scrollContentWrapper.scrollTop = 0;
-        
-        try {
-            await currentAudio.play();
-            incrementPlayCount(index);
-        } catch (e) {
-            console.error("Autoplay failed:", e);
-            updatePlayButtonUI("play");
-        }
-    } else {
-        updatePlayButtonUI("play"); 
-    }
+        try { await currentAudio.play(); incrementPlayCount(index); } catch (e) { updatePlayButtonUI("play"); }
+    } else { updatePlayButtonUI("play"); }
 }
 
 function togglePlayPause() {
     if (isLoading) return; 
-    if (currentTrackIndex === -1 && allTracks.length > 0) {
-        loadTrack(allTracks[0].index, true); 
-        return;
-    }
-    if (isPlaying) {
-        currentAudio.pause();
-    } else {
-        currentAudio.play().catch(e => console.error("Play failed:", e));
-    }
-    updateMediaNotification();
+    if (currentTrackIndex === -1 && allTracks.length > 0) { loadTrack(allTracks[0].index, true); return; }
+    if (isPlaying) { currentAudio.pause(); } else { currentAudio.play().catch(e => console.error("Play failed:", e)); }
 }
+
 function nextTrack() {
     if (isLoading) return;
     const currentArrayIndex = getArrayIndexOfTrack(currentTrackIndex);
     if (currentArrayIndex === -1) return;
     let nextArrayIndex = (currentArrayIndex + 1) % allTracks.length;
-    const nextTrackData = allTracks[nextArrayIndex];
-    if (nextTrackData) { loadTrack(nextTrackData.index, true); }
+    loadTrack(allTracks[nextArrayIndex].index, true);
 }
+
 function prevTrack() {
     if (isLoading) return;
     const currentArrayIndex = getArrayIndexOfTrack(currentTrackIndex);
     if (currentArrayIndex === -1) return;
     let prevArrayIndex = (currentArrayIndex - 1 + allTracks.length) % allTracks.length;
-    const prevTrackData = allTracks[prevArrayIndex];
-    if (prevTrackData) { loadTrack(prevTrackData.index, true); }
-}
-function seekTrack(progressValue) {
-    if (isNaN(currentAudio.duration) || currentAudio.duration === 0) return;
-    const seekTo = (progressValue / 100) * currentAudio.duration;
-    currentAudio.currentTime = seekTo;
-    if (!isPlaying) {
-        currentAudio.play().catch(e => console.error("Seek play failed:", e));
-        updateMediaNotification();
-    }
+    loadTrack(allTracks[prevArrayIndex].index, true);
 }
 
-// --- DOM EVENT LISTENERS ---
-mainPlayBtn.addEventListener('click', togglePlayPause);
-miniPlayBtn.addEventListener('click', togglePlayPause);
-document.getElementById('nextBtn').addEventListener('click', nextTrack);
-document.getElementById('prevBtn').addEventListener('click', prevTrack);
+function seekTrack(progressValue) {
+    if (isNaN(currentAudio.duration) || currentAudio.duration === 0) return;
+    currentAudio.currentTime = (progressValue / 100) * currentAudio.duration;
+    updateMediaNotification();
+}
+
+mainPlayBtn.addEventListener('click', togglePlayPause); miniPlayBtn.addEventListener('click', togglePlayPause);
+document.getElementById('nextBtn').addEventListener('click', nextTrack); document.getElementById('prevBtn').addEventListener('click', prevTrack);
 document.getElementById('minimizeBtn').addEventListener('click', () => {
-    expandedPlayer.classList.remove('active');
-    document.body.classList.remove('lock-scroll');
-    expandedPlayer.style.transform = ''; 
+    expandedPlayer.classList.remove('active'); document.body.classList.remove('lock-scroll'); expandedPlayer.style.transform = ''; 
 });
-// BUG FIX: Refined miniPlayer click listener to ignore control buttons
+
 miniPlayer.addEventListener('click', (e) => {
     if(e.target.closest('#miniPlayBtn')) return; 
     if (currentTrackIndex !== -1) {
-        expandedPlayer.classList.add('active');
-        document.body.classList.add('lock-scroll');
-        expandedPlayer.style.transform = ''; 
+        expandedPlayer.classList.add('active'); document.body.classList.add('lock-scroll'); expandedPlayer.style.transform = ''; 
     }
 });
+
 playerProgress.addEventListener('input', (e) => { seekTrack(e.target.value); });
 likeBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); 
-    if (currentTrackIndex === -1) return;
-    likeBtn.classList.add('like-animation');
-    likeBtn.addEventListener('animationend', () => { likeBtn.classList.remove('like-animation'); }, { once: true });
+    e.stopPropagation(); if (currentTrackIndex === -1) return;
     const newLikedState = !likeBtn.classList.contains('fas'); 
-
     if (newLikedState) {
         likeBtn.classList.remove('far'); likeBtn.classList.add('fas'); likeBtn.style.color = 'var(--spotify-green)';
         likedTrackIndexes[currentTrackIndex] = true;
@@ -936,27 +666,23 @@ likeBtn.addEventListener('click', (e) => {
         likeBtn.classList.remove('fas'); likeBtn.classList.add('far'); likeBtn.style.color = 'white';
         delete likedTrackIndexes[currentTrackIndex]; 
     }
-    saveLikedData(); 
-    renderLikedSongsCard(); 
+    saveLikedData(); renderLikedSongsCard(); 
 });
-// Audio event listeners
+
 currentAudio.addEventListener('loadedmetadata', () => {
-    playerProgress.max = 100;
-    totalTimeDisplay.textContent = formatTime(currentAudio.duration);
-    currentAudio.dispatchEvent(new Event('timeupdate')); 
+    playerProgress.max = 100; totalTimeDisplay.textContent = formatTime(currentAudio.duration);
+    updateMediaNotification();
 });
+
 currentAudio.addEventListener('timeupdate', () => {
     if(isNaN(currentAudio.duration) || currentAudio.duration === 0) return;
-    const progress = (currentAudio.currentTime / currentAudio.duration) * 100;
-    playerProgress.value = progress;
+    playerProgress.value = (currentAudio.currentTime / currentAudio.duration) * 100;
     currentTimeDisplay.textContent = formatTime(currentAudio.currentTime);
-    if (isPlaying) updateMediaNotification(); 
 });
-currentAudio.addEventListener('playing', () => { isPlaying = true; updatePlayButtonUI("pause"); updatePlaylistView(); });
-currentAudio.addEventListener('pause', () => { isPlaying = false; updatePlayButtonUI("play"); updatePlaylistView(); });
-currentAudio.addEventListener('ended', nextTrack);
-currentAudio.addEventListener('waiting', () => { if (isPlaying) { updatePlayButtonUI("loading"); } });
 
+currentAudio.addEventListener('playing', () => { isPlaying = true; updatePlayButtonUI("pause"); updatePlaylistView(); updateMediaNotification(); });
+currentAudio.addEventListener('pause', () => { isPlaying = false; updatePlayButtonUI("play"); updatePlaylistView(); updateMediaNotification(); });
+currentAudio.addEventListener('ended', nextTrack);
 
 // --- UI NAVIGATION & RENDERING ---
 function navigateToPage(pageId) {
@@ -973,41 +699,37 @@ footerNavItems.forEach(item => {
         if (pageId) { navigateToPage(pageId); }
     });
 });
+
 function setActiveLibraryView(viewId) {
-    musicContainer.style.display = 'none';
-    artistContainer.style.display = 'none';
-    tracksByArtistContainer.style.display = 'none';
-    likedSongsPlaylistContainer.style.display = 'none'; 
+    musicContainer.style.display = 'none'; artistContainer.style.display = 'none';
+    tracksByArtistContainer.style.display = 'none'; likedSongsPlaylistContainer.style.display = 'none'; 
     document.getElementById(viewId).style.display = 'block';
     libraryControls.style.visibility = viewId === 'musicContainer' ? 'visible' : 'hidden';
 }
+
+// FIXED: Navigation and filter tabs logic to maintain scroll/state
 filterTabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
         const contentType = e.currentTarget.getAttribute('data-content');
         filterTabs.forEach(t => t.classList.remove('active'));
         e.currentTarget.classList.add('active');
+        mainLibHeader.style.display = 'flex'; mainLibTabs.style.display = 'flex';
         if (contentType === 'artists') { showArtists(); } else { loadMusic(); }
     });
 });
 
 function createTrackListItem(data, containerType, trackNumber = null) {
-    const item = document.createElement('li');
-    item.className = 'track-item';
+    const item = document.createElement('li'); item.className = 'track-item';
     item.dataset.index = data.index; 
     let imageSource = data.image_base64 || "s512.png";
     const currentPlays = trackPlayCounts[data.index] || 0;
     const formattedPlays = new Intl.NumberFormat('en-US').format(currentPlays);
-
+    
     if (containerType.includes('Popular') || containerType === 'artistTracks' || containerType === 'likedSongs') { 
         const displayNum = trackNumber !== null ? trackNumber : (data.index + 1);
         const artistNames = data.artists.join(', '); 
         const subtitleText = containerType === 'likedSongs' ? artistNames : `${formattedPlays} plays`;
-
-        // Apply correct list item class for artist/playlist track styling
-        if (containerType === 'artistTracks' || containerType === 'likedSongs') {
-             item.classList.add('artist-page-track');
-        }
-
+        if (containerType === 'artistTracks' || containerType === 'likedSongs') { item.classList.add('artist-page-track'); }
         item.innerHTML = `
             <div class="track-number">${displayNum}</div>
             <div class="track-info"><h3>${data.title}</h3><p>${subtitleText}</p></div>
@@ -1025,397 +747,203 @@ function createTrackListItem(data, containerType, trackNumber = null) {
 }
 
 function renderLikedSongsCard() {
-    let likedCount = Object.keys(likedTrackIndexes).length;
-    let card = document.getElementById('likedSongsCard');
-    if (!card) {
-        card = document.createElement('li');
-        card.className = 'liked-songs-card';
-        card.id = 'likedSongsCard';
-        musicContainer.prepend(card);
-    }
+    let likedCount = Object.keys(likedTrackIndexes).length; let card = document.getElementById('likedSongsCard');
+    if (!card) { card = document.createElement('li'); card.className = 'liked-songs-card'; card.id = 'likedSongsCard'; musicContainer.prepend(card); }
     const subtitleText = likedCount === 0 ? 'Save your favorites!' : `${likedCount} songs`;
     card.innerHTML = `
         <div class="liked-icon-container"><i class="fas fa-heart"></i></div>
-        <div class="liked-songs-info">
-            <h3>Liked Songs</h3>
-            <p>Playlist • ${subtitleText}</p>
-        </div>
+        <div class="liked-songs-info"><h3>Liked Songs</h3><p>Playlist • ${subtitleText}</p></div>
     `;
     card.onclick = () => { renderLikedSongsPlaylist(); };
 }
+
 function loadMusic() {
-    musicContainer.innerHTML = '';
-    renderLikedSongsCard();
+    musicContainer.innerHTML = ''; renderLikedSongsCard();
     allTracks.forEach((data) => {
-        const item = createTrackListItem(data, 'music');
-        musicContainer.appendChild(item);
+        musicContainer.appendChild(createTrackListItem(data, 'music'));
     });
-    setActiveLibraryView('musicContainer');
-    updatePlaylistView();
+    setActiveLibraryView('musicContainer'); updatePlaylistView();
 }
+
 function renderLikedSongsPlaylist() {
-    setActiveLibraryView('likedSongsPlaylistContainer');
-    likedSongsPlaylistContainer.innerHTML = '';
-    // Back button
-    const backBtn = document.createElement('div');
-    backBtn.className = 'back-btn-fixed'; backBtn.innerHTML = '<i class="fas fa-arrow-left"></i>';
-    backBtn.onclick = () => {
-        likedSongsPlaylistContainer.style.display = 'none';
-        mainLibHeader.style.display = 'flex'; mainLibTabs.style.display = 'flex';
-        loadMusic(); // Go back to main library list view
+    setActiveLibraryView('likedSongsPlaylistContainer'); likedSongsPlaylistContainer.innerHTML = '';
+    mainLibHeader.style.display = 'none'; mainLibTabs.style.display = 'none';
+    const backBtn = document.createElement('div'); backBtn.className = 'back-btn-top'; backBtn.innerHTML = '<i class="fas fa-arrow-left"></i>';
+    backBtn.onclick = () => { 
+        likedSongsPlaylistContainer.style.display = 'none'; 
+        mainLibHeader.style.display = 'flex'; mainLibTabs.style.display = 'flex'; 
+        musicContainer.style.display = 'block'; 
     };
     likedSongsPlaylistContainer.appendChild(backBtn);
-    // Header Content
     const headerContent = document.createElement('div'); headerContent.className = 'fixed-header-content';
     const imageDiv = document.createElement('div'); imageDiv.className = 'liked-songs-image'; imageDiv.innerHTML = '<i class="fas fa-heart"></i>'; headerContent.appendChild(imageDiv);
     const metaDiv = document.createElement('div'); metaDiv.className = 'liked-songs-meta';
-    metaDiv.innerHTML = `<h4>PLAYLIST</h4><h1>Liked Songs</h1><p>Your Name</p>`; headerContent.appendChild(metaDiv);
+    metaDiv.innerHTML = `<h4>PLAYLIST</h4><h1>Liked Songs</h1><p>Your Library</p>`; headerContent.appendChild(metaDiv);
     likedSongsPlaylistContainer.appendChild(headerContent);
-    // Scroll Layer & Tracks
     const scrollLayer = document.createElement('div'); scrollLayer.className = 'playlist-content-scroll-layer';
     const likedTrackIndexesArray = Object.keys(likedTrackIndexes).map(index => parseInt(index));
     const likedTracks = allTracks.filter(t => likedTrackIndexesArray.includes(t.index)).sort((a, b) => b.index - a.index); 
     const listUl = document.createElement('ul'); listUl.className = 'track-list'; listUl.style.paddingBottom = '100px';
     if (likedTracks.length === 0) { listUl.innerHTML = `<li style="padding:16px; color:var(--text-faded);">No liked songs yet!</li>`; } 
     else { likedTracks.forEach((data, index) => { listUl.appendChild(createTrackListItem(data, 'likedSongs', index + 1)); }); }
-    scrollLayer.appendChild(listUl);
-    likedSongsPlaylistContainer.appendChild(scrollLayer);
-    updatePlaylistView();
-}
-
-function createArtistListItem(artistData) {
-    const item = document.createElement('li');
-    item.className = 'artist-item';
-    const artistName = artistData.name;
-    const imageSource = artistData.image_base64 || "s512.png";
-    item.innerHTML = `<img class="artist-img" src="${imageSource}"><div class="artist-info"><h3>${artistName}</h3><p>Artist</p></div>`;
-    item.addEventListener('click', () => { showTracksByArtist(artistName); });
-    return item;
+    scrollLayer.appendChild(listUl); likedSongsPlaylistContainer.appendChild(scrollLayer);
 }
 
 function showArtists() {
-    setActiveLibraryView('artistContainer');
-    artistContainer.innerHTML = '';
-    // Sort artists by name before rendering
+    setActiveLibraryView('artistContainer'); artistContainer.innerHTML = '';
     const sortedArtists = Array.from(allArtists.values()).sort((a, b) => a.name.localeCompare(b.name));
     sortedArtists.forEach((data) => {
-        artistContainer.appendChild(createArtistListItem(data));
+        const item = document.createElement('li'); item.className = 'artist-item';
+        item.innerHTML = `<img class="artist-img" src="${data.image_base64 || 's512.png'}"><div class="artist-info"><h3>${data.name}</h3><p>Artist</p></div>`;
+        item.addEventListener('click', () => { showTracksByArtist(data.name); });
+        artistContainer.appendChild(item);
     });
 }
 
-/**
- * REVISED: Implements the sticky banner and scroll-through effect.
- */
+// FIXED: Navigate back to artist list without resetting view
 function showTracksByArtist(artistName) {
     tracksByArtistContainer.innerHTML = '';
     const artistData = allArtists.get(artistName.toLowerCase());
     const artistImage = artistData ? (artistData.image_base64_highres || artistData.image_base64) : "s512.png";
     const tracks = allTracks.filter(track => track.artists.some(artist => artist.toLowerCase() === artistName.toLowerCase()));
-    
-    // 1. Setup View
-    setActiveLibraryView('tracksByArtistContainer');
-    mainLibHeader.style.display = 'none'; 
-    mainLibTabs.style.display = 'none';
-    tracksByArtistContainer.scrollTop = 0; // Reset scroll position
-
-    // 2. Container for the whole page content
-    const pageContent = document.createElement('div');
-    pageContent.id = 'artistPageContent';
-    
-    // 3. The Sticky Header Wrapper
-    const stickyHeader = document.createElement('div');
-    stickyHeader.className = 'artist-page-header-sticky';
-
-    // 4. Back Button (Absolute/Fixed relative to the scrolling container)
-    const backBtn = document.createElement('div'); 
-    backBtn.className = 'back-btn-top'; 
-    backBtn.innerHTML = '<i class="fas fa-arrow-left"></i>';
+    setActiveLibraryView('tracksByArtistContainer'); mainLibHeader.style.display = 'none'; 
+    mainLibTabs.style.display = 'none'; tracksByArtistContainer.scrollTop = 0; 
+    const pageContent = document.createElement('div'); pageContent.id = 'artistPageContent';
+    const backBtn = document.createElement('div'); backBtn.className = 'back-btn-top'; backBtn.innerHTML = '<i class="fas fa-arrow-left"></i>';
     backBtn.onclick = () => { 
         tracksByArtistContainer.style.display = 'none'; 
-        mainLibHeader.style.display = 'flex'; 
-        mainLibTabs.style.display = 'flex'; 
-        showArtists(); 
-        tracksByArtistContainer.removeEventListener('scroll', handleArtistPageScroll);
+        mainLibHeader.style.display = 'none'; mainLibTabs.style.display = 'none'; 
+        artistContainer.style.display = 'block'; 
+        mainLibHeader.style.display = 'flex'; mainLibTabs.style.display = 'flex';
     };
     tracksByArtistContainer.appendChild(backBtn);
-    
-    // 5. Banner Area 
-    const banner = document.createElement('div');
-    banner.className = 'artist-banner-area';
-    banner.id = 'artistPageBanner';
+    const banner = document.createElement('div'); banner.className = 'artist-banner-area';
     banner.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.7)), url('${artistImage}')`;
-    
-    // 6. Banner Overlay (Artist details - will fade out)
-    const bannerOverlay = document.createElement('div');
-    bannerOverlay.className = 'artist-details-overlay';
-    bannerOverlay.id = 'artistDetailsOverlay';
-    bannerOverlay.innerHTML = `
-        <h2>${artistName} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:24px;"></i></h2>
-        <p class="artist-listeners-count">55.1L monthly listeners</p>
-        <button class="follow-btn-large" id="bannerFollowBtn" style="display:none; align-self:flex-start;padding:10px 30px;border:1px solid white;border-radius:25px;color:white;background:none;font-weight:700;cursor:pointer;text-transform:uppercase;font-size:14px;margin-top:15px;">Follow</button>
-    `;
-    banner.appendChild(bannerOverlay);
-    stickyHeader.appendChild(banner);
-
-    // 7. Sticky Follow Button (Removed as requested)
-    // Removed the creation of the stickyFollowBtn element
-
-    pageContent.appendChild(stickyHeader); // The sticky header is now part of the content
-
-    // 8. Action Bar (Play button)
-    const actionBar = document.createElement('div'); 
-    actionBar.className = 'artist-action-bar';
-    const playBtn = document.createElement('button');
-    playBtn.className = 'artist-play-btn'; 
-    playBtn.innerHTML = '<i class="fas fa-play"></i>';
-    playBtn.addEventListener('click', () => { if(tracks.length > 0) loadTrack(tracks[0].index, true); });
-    
-    // Other Controls - Only ellipsis icon remains
-    const otherControls = document.createElement('div');
-    otherControls.className = 'artist-other-controls';
-    // Removed the "Follow" button from this bar
-    otherControls.innerHTML = `<i class="fas fa-ellipsis-v" style="color: #b3b3b3; font-size: 20px;"></i>`;
-    
-    // Note: The positioning of the play button relative to the track list is managed by
-    // its absolute positioning within the artist-action-bar.
-    actionBar.appendChild(otherControls);
-    actionBar.appendChild(playBtn);
-    pageContent.appendChild(actionBar);
-
-
-    // 9. Track List Content (Scrolls under the sticky header)
-    const popTitle = document.createElement('h3'); 
-    popTitle.className = 'popular-title'; 
-    popTitle.textContent = 'Popular'; 
-    popTitle.style.marginTop = '20px';
-    pageContent.appendChild(popTitle);
-
-    const listUl = document.createElement('ul'); 
-    listUl.className = 'track-list'; 
-    listUl.style.paddingBottom = '100px'; 
-    
-    const sortedTracks = tracks.sort((a, b) => (trackPlayCounts[b.index] || 0) - (trackPlayCounts[a.index] || 0));
-    
-    if (sortedTracks.length === 0) { 
-        listUl.innerHTML = `<li style="padding:16px; color:var(--text-faded);">No songs found for this artist.</li>`; 
-    } 
-    else { 
-        sortedTracks.forEach((data, index) => { 
-            listUl.appendChild(createTrackListItem(data, 'artistTracks', index + 1)); 
-        }); 
-    }
-    
-    pageContent.appendChild(listUl); 
-    tracksByArtistContainer.appendChild(pageContent);
-
-
-    // 10. Scroll Listener for Sticky Effects
-    const handleArtistPageScroll = () => {
-        const scrollTop = tracksByArtistContainer.scrollTop;
-        const bannerHeight = 350; 
-        const fadeThreshold = bannerHeight - 100;
-        
-        // --- Banner Opacity & Height Reduction ---
-        // Reduce opacity of artist name/listeners on scroll
-        const overlayOpacity = Math.max(0, 1 - (scrollTop / 150));
-        bannerOverlay.style.opacity = overlayOpacity;
-
-        // Make the banner area shrink slightly and fade to a solid color
-        const bannerShrink = Math.max(100, bannerHeight - scrollTop);
-        banner.style.height = `${bannerShrink}px`;
-        banner.style.boxShadow = scrollTop > 10 ? 'none' : 'inset 0 -150px 70px -50px rgba(0,0,0,0.7)';
-        
-        // --- Sticky Header Background Toggle (The main effect) ---
-        // Change the sticky header background to black when the track list scrolls over the banner area
-        if (scrollTop > (bannerHeight - 60)) { // 60px chosen to align with the height of the back button area
-            stickyHeader.style.backgroundColor = 'var(--spotify-black)';
-        } else {
-            stickyHeader.style.backgroundColor = 'transparent';
-        }
-        
-        // --- Back Button Opacity (Optional) ---
-        const backBtnOpacity = Math.min(1, Math.max(0, scrollTop / 100));
-        backBtn.style.backgroundColor = `rgba(18, 18, 18, ${backBtnOpacity})`;
-    };
-
-    tracksByArtistContainer.addEventListener('scroll', handleArtistPageScroll);
-    
-    // Initial scroll check (important for instant loading when a track is playing and scroll is not zero)
-    handleArtistPageScroll(); 
-    updatePlaylistView();
+    const bannerOverlay = document.createElement('div'); bannerOverlay.className = 'artist-details-overlay';
+    bannerOverlay.innerHTML = `<h2>${artistName} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:24px;"></i></h2><p>55.1L monthly listeners</p>`;
+    banner.appendChild(bannerOverlay); pageContent.appendChild(banner); 
+    const listUl = document.createElement('ul'); listUl.className = 'track-list'; listUl.style.paddingBottom = '100px'; 
+    tracks.forEach((data, index) => { listUl.appendChild(createTrackListItem(data, 'artistTracks', index + 1)); });
+    pageContent.appendChild(listUl); tracksByArtistContainer.appendChild(pageContent);
 }
-
 
 function renderExpandedPlayerPopularTracks(artistName) {
     const popularTracksContainer = document.getElementById('artistPopularTracks');
     popularTracksContainer.innerHTML = '';
     const tracks = allTracks.filter(track => track.primaryArtist.toLowerCase() === artistName.toLowerCase());
-    const sortedTracks = tracks.sort((a, b) => (trackPlayCounts[b.index] || 0) - (trackPlayCounts[a.index] || 0));
-    const popular = sortedTracks.slice(0, 6);
-    popular.forEach((data, index) => {
+    tracks.slice(0, 6).forEach((data, index) => {
         popularTracksContainer.appendChild(createTrackListItem(data, 'expandedPlayerPopular', index + 1));
     });
-    updatePlaylistView();
 }
 
-// Search Logic
-function calculateScore(track, query) {
-    let score = 0;
-    const lowerQuery = query.toLowerCase();
-    const title = track.title.toLowerCase();
-    if (title.startsWith(lowerQuery)) { score += 10; } else if (title.includes(lowerQuery)) { score += 5; }
-    const primaryArtist = track.primaryArtist.toLowerCase();
-    if (primaryArtist.startsWith(lowerQuery)) { score += 8; } else if (primaryArtist.includes(lowerQuery)) { score += 4; }
-    score += (track.play_count / 10000000000); 
-    return score;
-}
-function renderSearchResults(results) {
-    searchResultsContainer.innerHTML = '';
-    if (results.length === 0) { searchResultsContainer.innerHTML = `<li style="padding: 16px; color: var(--text-faded);">No relevant results found.</li>`; return; }
-    results.forEach((data, i) => {
-        const item = createTrackListItem(data, 'search');
-        setTimeout(() => { item.classList.add('show'); }, i * 50); 
-        searchResultsContainer.appendChild(item);
-    });
-    updatePlaylistView();
-}
-searchInput.addEventListener('input', async (e) => { 
+searchInput.addEventListener('input', (e) => { 
     const query = e.target.value.toLowerCase().trim();
-    if (allTracks.length === 0) { await loadMusicAndArtists(); }
     if (query.length > 0) {
         browsingSection.classList.add('hidden');
-        const scoredTracks = allTracks.map(track => ({ ...track, score: calculateScore(track, query) })).filter(track => track.score > 0);
-        scoredTracks.sort((a, b) => b.score - a.score);
-        renderSearchResults(scoredTracks);
+        const filtered = allTracks.filter(t => t.title.toLowerCase().includes(query) || t.primaryArtist.toLowerCase().includes(query));
+        renderSearchResults(filtered);
     } else {
-        browsingSection.classList.remove('hidden');
-        searchResultsContainer.innerHTML = '';
+        browsingSection.classList.remove('hidden'); searchResultsContainer.innerHTML = '';
     }
 });
 
-// Player Drag/Swipe Logic
-let startX = 0; let startY = 0; let isDragging = false; let isVerticalDrag = false; let isHorizontalDrag = false;
-const SWIPE_THRESHOLD_Y = 100; const SWIPE_THRESHOLD_X = 50; 
+function renderSearchResults(results) {
+    searchResultsContainer.innerHTML = '';
+    results.forEach(data => searchResultsContainer.appendChild(createTrackListItem(data, 'search')));
+}
+
+// --- PLAYER DRAG LOGIC ---
+let startX = 0; let startY = 0; let isVerticalDrag = false; let isHorizontalDrag = false;
+const SWIPE_THRESHOLD_Y = 100; const SWIPE_THRESHOLD_X = 50;
+
 document.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1 && expandedPlayer.classList.contains('active')) {
-        startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = false; isVerticalDrag = false; isHorizontalDrag = false;
+        startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+        isVerticalDrag = false; isHorizontalDrag = false;
         expandedPlayer.classList.add('is-dragging');
-        if (startY < 50 || (scrollContentWrapper.scrollTop === 0 && startY < (window.innerHeight / 2))) { e.preventDefault(); }
     }
-}, { passive: false });
+}, { passive: true });
+
 document.addEventListener('touchmove', (e) => {
     if (e.touches.length === 1 && expandedPlayer.classList.contains('active')) {
-        const currentX = e.touches[0].clientX; const currentY = e.touches[0].clientY;
-        const deltaX = currentX - startX; const deltaY = currentY - startY;
-        const absDeltaX = Math.abs(deltaX); const absDeltaY = Math.abs(deltaY);
-        if (!isDragging) {
-             if (absDeltaY > 10 || absDeltaX > 10) {
-                 isDragging = true;
-                 if (absDeltaY > absDeltaX) { isVerticalDrag = true; } else { isHorizontalDrag = true; }
-             }
+        const deltaX = e.touches[0].clientX - startX;
+        const deltaY = e.touches[0].clientY - startY;
+
+        if (!isVerticalDrag && !isHorizontalDrag) {
+            if (Math.abs(deltaY) > 10 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                if (scrollContentWrapper.scrollTop <= 0 && deltaY > 0) {
+                    isVerticalDrag = true;
+                }
+            } else if (Math.abs(deltaX) > 10) {
+                isHorizontalDrag = true;
+            }
         }
+
         if (isVerticalDrag) {
-            if (scrollContentWrapper.scrollTop === 0) {
-                 if (deltaY > 0) { expandedPlayer.style.transform = `translateY(${Math.max(0, deltaY)}px)`; e.preventDefault(); } 
-                 else if (deltaY < 0) { isVerticalDrag = false; expandedPlayer.style.transform = 'translateY(0)'; expandedPlayer.classList.remove('is-dragging'); }
-            } else { isVerticalDrag = false; expandedPlayer.classList.remove('is-dragging'); }
-        } else if (isHorizontalDrag) { e.preventDefault(); }
+            if (scrollContentWrapper.scrollTop <= 0) {
+                if (e.cancelable) e.preventDefault();
+                expandedPlayer.style.transform = `translateY(${Math.max(0, deltaY)}px)`;
+            } else {
+                isVerticalDrag = false;
+                expandedPlayer.style.transform = 'translateY(0)';
+            }
+        }
     }
 }, { passive: false });
+
 document.addEventListener('touchend', (e) => {
     if (expandedPlayer.classList.contains('active')) {
         expandedPlayer.classList.remove('is-dragging');
-        const endY = e.changedTouches[0].clientY;
+        const deltaY = e.changedTouches[0].clientY - startY;
         const deltaX = startX - e.changedTouches[0].clientX;
-        const deltaY = endY - startY;
-        const absDeltaX = Math.abs(deltaX);
-        if (isVerticalDrag) {
-            if (deltaY > SWIPE_THRESHOLD_Y) {
-                expandedPlayer.style.transform = 'translateY(100%)';
-                expandedPlayer.addEventListener('transitionend', function handler() {
-                    expandedPlayer.classList.remove('active'); document.body.classList.remove('lock-scroll'); expandedPlayer.style.transform = ''; 
-                    expandedPlayer.removeEventListener('transitionend', handler);
-                }, { once: true });
-            } else { expandedPlayer.style.transform = 'translateY(0)'; }
-        } else if (isHorizontalDrag && absDeltaX > SWIPE_THRESHOLD_X) {
-            if (deltaX > 0) { nextTrack(); } else { prevTrack(); }
+
+        if (isVerticalDrag && deltaY > SWIPE_THRESHOLD_Y) {
+            expandedPlayer.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                expandedPlayer.classList.remove('active');
+                document.body.classList.remove('lock-scroll');
+                expandedPlayer.style.transform = '';
+            }, 300);
+        } else {
+            expandedPlayer.style.transform = 'translateY(0)';
+        }
+
+        if (isHorizontalDrag && Math.abs(deltaX) > SWIPE_THRESHOLD_X) {
+            if (deltaX > 0) nextTrack(); else prevTrack();
         }
     }
-    isDragging = false; isVerticalDrag = false; isHorizontalDrag = false;
-}, { passive: true }); 
-const maxScroll = 250;
-function updateCollapsibleHeader() {
+    isVerticalDrag = false; isHorizontalDrag = false;
+}, { passive: true });
+
+scrollContentWrapper.addEventListener('scroll', () => {
     const scrollTop = scrollContentWrapper.scrollTop;
-    const scaleFactor = Math.max(0.7, 1 - (scrollTop / maxScroll) * 0.3); 
-    const opacityFactor = Math.max(0, 1 - (scrollTop / (maxScroll * 0.8)));
-    playerArt.style.transform = `scale(${scaleFactor})`; playerArt.style.opacity = opacityFactor;
-    const headerOpacity = Math.min(1, scrollTop / 150); 
-    playerHeader.style.backgroundColor = `rgba(18, 18, 18, ${headerOpacity})`;
-    const artistDetailsOverlay = document.querySelector('.artist-details-overlay');
-    if (artistDetailsOverlay) {
-        const bannerOpacity = Math.max(0, 1 - (scrollTop / 100));
-        artistDetailsOverlay.style.opacity = bannerOpacity;
-    }
-}
-scrollContentWrapper.addEventListener('scroll', updateCollapsibleHeader);
+    const opacityFactor = Math.max(0, 1 - (scrollTop / 200));
+    playerArt.style.transform = `scale(${Math.max(0.7, 1 - (scrollTop / 500))})`;
+    playerArt.style.opacity = opacityFactor;
+    playerHeader.style.backgroundColor = `rgba(18, 18, 18, ${Math.min(1, scrollTop / 150)})`;
+});
 
-
-// --- DATA LOADING & INITIALIZATION ---
+// --- DATA LOADING ---
 async function loadMusicAndArtists() {
-    if (allTracks.length > 0) { loadMusic(); hidePreLoader(); return; }
     try {
          const musicSnapshot = await getDocs(collection(db, "music"));
-         let tempTracks = [];
          let index = 0;
          musicSnapshot.forEach(doc => {
              const data = doc.data();
-             const artistNames = (Array.isArray(data.artists) ? data.artists.map(a => a.name.trim()) : (data.artist || "Unknown").split(',').map(a => a.trim()));
-             // ** FIX 3: Use the first artist name as the primary artist for consistency **
-             const primaryArtist = artistNames[0]; 
-             const mockPlayCount = Math.floor(Math.random() * 2000000000) + 500000;
-             
-             // Normalize URL properties for the new FLAC/MP3 logic
-             const flacSrc = data.flac_url || data.flacUrl;
-             const mp3Src = data.mp3_url || data.mp3Url || data.url; 
-
-             tempTracks.push({ 
-                 ...data, id: doc.id, index: index++, play_count: data.play_count || mockPlayCount, 
-                 artists: artistNames, primaryArtist: primaryArtist, duration: data.duration || 180,
-                 flac_url: flacSrc, 
-                 mp3_url: mp3Src
-             });
+             const artists = Array.isArray(data.artists) ? data.artists.map(a => a.name) : [data.artist || "Unknown"];
+             allTracks.push({ ...data, index: index++, artists, primaryArtist: artists[0], duration: data.duration || 180 });
          });
-         allTracks = tempTracks; 
-         allTracks.forEach(t => { trackPlayCounts[t.index] = t.play_count; });
-
          const artistSnapshot = await getDocs(collection(db, "artists"));
          artistSnapshot.forEach(doc => {
              const data = doc.data();
-             allArtists.set(data.name.toLowerCase(), { image_base64_highres: data.image_base64, ...data });
+             allArtists.set(data.name.toLowerCase(), { ...data, image_base64_highres: data.image_base64 });
          });
-         
-         loadMusic();
-         hidePreLoader(); 
-    } catch (error) { 
-        console.error("Error loading Firebase data:", error); 
-        hidePreLoader(); 
-    }
+         loadMusic(); hidePreLoader(); 
+    } catch (error) { hidePreLoader(); }
 }
+loadLikedData(); loadMusicAndArtists();
+</script>
 
-loadLikedData();
-loadMusicAndArtists();
-  
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => {
-          console.log('Service Worker Registered:', reg.scope);
-        })
-        .catch(err => {
-          console.log('Service Worker Registration Failed:', err);
-        });
-    });
-  }
-    </script>
 </body>
 </html>
+
