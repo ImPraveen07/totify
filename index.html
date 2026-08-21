@@ -236,7 +236,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 <div class="main-content">
     <div class="app-page" id="homePage"><div class="library-header"><span style="font-size: 30px;">👋 Hello!</span></div><h2 style="padding: 0 16px;">It's New Music Friday!</h2><div style="height: 300px; background: #282828; margin: 16px; border-radius: 8px; display: flex; justify-content: center; align-items: center;"><p>Home Feed Content Placeholder</p></div></div>
     <div class="app-page" id="searchPage"><div class="search-header"><span class="title">Search</span><i class="fas fa-camera"></i></div><div class="search-bar"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="What do you want to listen to?"></div><ul class="track-list" id="searchResultsContainer"></ul><div class="browsing-section" id="browsingSection"><h3 class="start-browsing">Start browsing</h3><div class="browsing-grid"><div class="grid-item" style="background:linear-gradient(to bottom right, #AA1445, #E93F6A);">Music</div><div class="grid-item" style="background:linear-gradient(to bottom right, #1E8145, #38A169);">Podcasts</div><div class="grid-item" style="background:linear-gradient(to bottom right, #800080, #A020F0);">Live Events</div><div class="grid-item" style="background:linear-gradient(to bottom right, #005A9C, #0080C0);">Home of I-Pop</div></div><h3 class="start-browsing">Discover something new</h3><div style="height: 200px; background: #282828; margin: 16px; border-radius: 8px; display: flex; justify-content: center; align-items: center;"><p>Discovery Carousel Placeholder</p></div></div></div>
-    <div class="app-page active" id="libraryPage"><div class="library-header" id="mainLibHeader"><span class="title">Your Library</span><div><i class="fas fa-search" id="librarySearchIcon" style="margin-right: 20px; cursor: pointer;"></i><i class="fas fa-plus" style="cursor: pointer;"></i></div></div><div class="library-filter-tabs" id="mainLibTabs"><div class="filter-tab active" data-content="playlists">Playlists</div><div class="filter-tab" data-content="artists">Artists</div></div><div class="library-controls" id="libraryControls"><div style="display:flex; align-items:center;"><i class="fas fa-arrow-up"></i><i class="fas fa-arrow-down" style="margin-right: 15px;"></i><span>Recents</span></div><i class="fas fa-th-large" style="margin-right: 0;"></i> </div><ul class="track-list" id="musicContainer"><div style="height: 100px; display: flex; justify-content: center; align-items: center; color: var(--text-faded);"><p>Loading Music...</p></div></ul><ul class="track-list" id="artistContainer" style="display:none;"></div><div id="tracksByArtistContainer" style="display:none;"></div><div id="likedSongsPlaylistContainer" style="display:none;"></div></div>
+    <div class="app-page active" id="libraryPage"><div class="library-header" id="mainLibHeader"><span class="title">Your Library</span><div><i class="fas fa-search" id="librarySearchIcon" style="margin-right: 20px; cursor: pointer;"></i><i class="fas fa-plus" style="cursor: pointer;"></i></div></div><div class="library-filter-tabs" id="mainLibTabs"><div class="filter-tab active" data-content="playlists">Playlists</div><div class="filter-tab" data-content="artists">Artists</div></div><div class="library-controls" id="libraryControls"><div style="display:flex; align-items:center;"><i class="fas fa-arrow-up"></i><i class="fas fa-arrow-down" style="margin-right: 15px;"></i><span>Recents</span></div><i class="fas fa-th-large" style="margin-right: 0;"></i> </div><ul class="track-list" id="musicContainer"><div style="height: 100px; display: flex; justify-content: center; align-items: center; color: var(--text-faded);"><p>Loading Music...</p></div></ul><ul class="track-list" id="artistContainer" style="display:none;"></ul><div id="tracksByArtistContainer" style="display:none;"></div><div id="likedSongsPlaylistContainer" style="display:none;"></div></div>
 </div>
 
 <div class="expanded-player" id="expandedPlayer">
@@ -247,7 +247,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
             <i class="fas fa-ellipsis-v"></i>
         </div>
         <div class="player-art-container">
-            <img class="player-art" id="playerArt" src="" alt="Album Art">
+            <!-- IMPORTANT: crossorigin="anonymous" is needed to pull colors from external archive.org images -->
+            <img class="player-art" id="playerArt" src="" alt="Album Art" crossorigin="anonymous">
         </div>
         <div class="player-details">
             <div><h2 id="playerTrackTitle"></h2><p id="playerArtistName"></p></div>
@@ -289,7 +290,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 </div>
 
 <div class="mini-player" id="miniPlayer">
-    <img id="miniArt" src="" alt="Album Art" class="track-img" style="width: 40px; height: 40px; border-radius: 2px;">
+    <img id="miniArt" src="" alt="Album Art" class="track-img" crossorigin="anonymous" style="width: 40px; height: 40px; border-radius: 2px;">
     <div class="mini-track-info"><h4 id="miniTitle"></h4><p id="miniArtist"></p></div>
     <div class="mini-controls"><button id="miniPlayBtn"><i class="fas fa-play"></i></button></div>
 </div>
@@ -348,29 +349,37 @@ if ('serviceWorker' in navigator) {
 
 // --- FIXED DYNAMIC COLOR EXTRACTION ---
 function updateDynamicColors(imgElement) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 10; canvas.height = 10;
-    
-    // Sample the center area of the image to get a true dominant color (avoiding green borders/defaults)
-    ctx.drawImage(imgElement, imgElement.width / 4, imgElement.height / 4, imgElement.width / 2, imgElement.height / 2, 0, 0, 10, 10);
-    const data = ctx.getImageData(0, 0, 10, 10).data;
-    
-    let r = 0, g = 0, b = 0;
-    for (let i = 0; i < data.length; i += 4) {
-        r += data[i]; g += data[i+1]; b += data[i+2];
-    }
-    r = Math.floor(r / (data.length / 4));
-    g = Math.floor(g / (data.length / 4));
-    b = Math.floor(b / (data.length / 4));
+    try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 10; canvas.height = 10;
+        
+        // Sample the center area of the image to get a true dominant color (avoiding green borders/defaults)
+        ctx.drawImage(imgElement, imgElement.width / 4, imgElement.height / 4, imgElement.width / 2, imgElement.height / 2, 0, 0, 10, 10);
+        const data = ctx.getImageData(0, 0, 10, 10).data;
+        
+        let r = 0, g = 0, b = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            r += data[i]; g += data[i+1]; b += data[i+2];
+        }
+        r = Math.floor(r / (data.length / 4));
+        g = Math.floor(g / (data.length / 4));
+        b = Math.floor(b / (data.length / 4));
 
-    const vibrantColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
-    const glassColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
-    
-    miniPlayer.style.backgroundColor = glassColor;
-    expandedPlayer.style.transition = "background 0.5s ease";
-    expandedPlayer.style.background = `linear-gradient(to bottom, ${vibrantColor} 0%, #000 100%)`;
-    document.querySelector('meta[name="theme-color"]').setAttribute('content', `rgb(${r}, ${g}, ${b})`);
+        const vibrantColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
+        const glassColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
+        
+        miniPlayer.style.backgroundColor = glassColor;
+        expandedPlayer.style.transition = "background 0.5s ease";
+        expandedPlayer.style.background = `linear-gradient(to bottom, ${vibrantColor} 0%, #000 100%)`;
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', `rgb(${r}, ${g}, ${b})`);
+    } catch (e) {
+        // Fallback in case archive.org or other external source blocks canvas cross-origin data extraction
+        console.warn("CORS issue extracting color, using default gradient.");
+        miniPlayer.style.backgroundColor = "rgba(40, 40, 40, 0.4)";
+        expandedPlayer.style.background = `linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, #000 100%)`;
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', `#121212`);
+    }
 }
 
 // --- UTILITY & STATE FUNCTIONS ---
@@ -439,7 +448,7 @@ function updatePlaylistView() {
 function updateMediaNotification() {
     const currentTrack = allTracks.find(t => t.index === currentTrackIndex);
     if (!currentTrack) return;
-    const notificationImage = currentTrack.image_base64 || "s512.png"; 
+    const notificationImage = currentTrack.image_url || "s512.png"; 
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: currentTrack.title, artist: currentTrack.artists.join(', '),    
@@ -568,11 +577,11 @@ async function loadTrack(index, autoPlay = true, seekTime = 0) {
     if (!sourceUrl) return;
 
     if (isPlaying) currentAudio.pause(); isPlaying = false; currentTrackIndex = index;
-    const imageSource = track.image_base64 || "s512.png"; 
+    const imageSource = track.image_url || "s512.png"; 
     const fullArtistList = track.artists.join(', ');    
     const primaryArtist = track.primaryArtist; 
     const artistData = allArtists.get(primaryArtist.toLowerCase());
-    const artistImageSource = artistData ? artistData.image_base64_highres || artistData.image_base64 : ''; 
+    const artistImageSource = artistData ? artistData.image_url : ''; 
     
     playerArt.src = imageSource;
     // MATCH COLOR ON LOAD
@@ -721,7 +730,7 @@ filterTabs.forEach(tab => {
 function createTrackListItem(data, containerType, trackNumber = null) {
     const item = document.createElement('li'); item.className = 'track-item';
     item.dataset.index = data.index; 
-    let imageSource = data.image_base64 || "s512.png";
+    let imageSource = data.image_url || "s512.png";
     const currentPlays = trackPlayCounts[data.index] || 0;
     const formattedPlays = new Intl.NumberFormat('en-US').format(currentPlays);
     
@@ -738,7 +747,7 @@ function createTrackListItem(data, containerType, trackNumber = null) {
     } else { 
         const artistNames = data.artists.join(', '); 
         item.innerHTML = `
-            <img class="track-img" src="${imageSource}" alt="Album Art">
+            <img class="track-img" src="${imageSource}" alt="Album Art" crossorigin="anonymous">
             <div class="track-info"><h3>${data.title}</h3><p>${artistNames}</p></div>
         `;
     }
@@ -794,7 +803,7 @@ function showArtists() {
     const sortedArtists = Array.from(allArtists.values()).sort((a, b) => a.name.localeCompare(b.name));
     sortedArtists.forEach((data) => {
         const item = document.createElement('li'); item.className = 'artist-item';
-        item.innerHTML = `<img class="artist-img" src="${data.image_base64 || 's512.png'}"><div class="artist-info"><h3>${data.name}</h3><p>Artist</p></div>`;
+        item.innerHTML = `<img class="artist-img" src="${data.image_url || 's512.png'}" crossorigin="anonymous"><div class="artist-info"><h3>${data.name}</h3><p>Artist</p></div>`;
         item.addEventListener('click', () => { showTracksByArtist(data.name); });
         artistContainer.appendChild(item);
     });
@@ -804,7 +813,7 @@ function showArtists() {
 function showTracksByArtist(artistName) {
     tracksByArtistContainer.innerHTML = '';
     const artistData = allArtists.get(artistName.toLowerCase());
-    const artistImage = artistData ? (artistData.image_base64_highres || artistData.image_base64) : "s512.png";
+    const artistImage = artistData ? artistData.image_url : "s512.png";
     const tracks = allTracks.filter(track => track.artists.some(artist => artist.toLowerCase() === artistName.toLowerCase()));
     setActiveLibraryView('tracksByArtistContainer'); mainLibHeader.style.display = 'none'; 
     mainLibTabs.style.display = 'none'; tracksByArtistContainer.scrollTop = 0; 
@@ -931,19 +940,25 @@ async function loadMusicAndArtists() {
          musicSnapshot.forEach(doc => {
              const data = doc.data();
              const artists = Array.isArray(data.artists) ? data.artists.map(a => a.name) : [data.artist || "Unknown"];
-             allTracks.push({ ...data, index: index++, artists, primaryArtist: artists[0], duration: data.duration || 180 });
+             // Map standard URLs, fall back to base64 for old tracks
+             const mappedImageUrl = data.image_url || data.image || data.image_base64 || "s512.png";
+             allTracks.push({ ...data, index: index++, artists, primaryArtist: artists[0], duration: data.duration || 180, image_url: mappedImageUrl });
          });
          const artistSnapshot = await getDocs(collection(db, "artists"));
          artistSnapshot.forEach(doc => {
              const data = doc.data();
-             allArtists.set(data.name.toLowerCase(), { ...data, image_base64_highres: data.image_base64 });
+             // Consolidate properties for artists too
+             const mappedArtistUrl = data.image_url || data.image_base64_highres || data.image_base64 || data.image || "s512.png";
+             allArtists.set(data.name.toLowerCase(), { ...data, image_url: mappedArtistUrl });
          });
          loadMusic(); hidePreLoader(); 
-    } catch (error) { hidePreLoader(); }
+    } catch (error) { 
+         console.error("Firebase error: ", error);
+         hidePreLoader(); 
+    }
 }
 loadLikedData(); loadMusicAndArtists();
 </script>
 
 </body>
 </html>
-
