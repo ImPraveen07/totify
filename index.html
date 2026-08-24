@@ -2,24 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta property="og:title" content="Totify"><metaHere is the fully updated code. I have integrated the Spotify Canvas-style video loop feature exactly as you requested. 
-
-### What's added:
-1. **Full-Screen Video Canvas**: If the song has a `video_url` (or `video`), it replaces the album art and takes over the expanded player background with a `1080x1920` (Insta reel ratio) format.
-2. **Device Detection**: Using CSS Media Queries, it will **only** activate on mobile devices in portrait mode. If opened on a PC, laptop, or landscape orientation, it automatically falls back to the standard album art image.
-3. **Continuous Background Playback**: The video is set to loop endlessly and is completely decoupled from the audio playback state. If you pause the music, the visuals will continue to play uninterrupted.
-4. **Spotify-Style Layout**: When the video is active, a layout spacer dynamically pushes the song title, playback controls, and lyrics/menus to the bottom of the screen to lay cleanly over the video (exactly like the reference image).
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
 <meta property="og:title" content="Totify"><meta property="og:description" content="Listen to music like Spotify. Your music library and more."><meta property="og:image" content="/s512.png"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Totify</title>
-<link href="[https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap)" rel="stylesheet">
-<link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css)">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" sizes="180x180" href="/s192.png"><link rel="apple-touch-icon" sizes="512x512" href="/s512.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#1db954">
@@ -85,46 +72,81 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);col
 .expanded-player{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, rgb(35, 120, 95) 0%, var(--bg-darker) 100%);z-index:100;display:flex;flex-direction:column;padding:0;box-sizing:border-box;transition:transform var(--transition-premium),background 0.5s ease;transform:translateY(100%);}
 .expanded-player.is-dragging{transition:none;}
 .expanded-player.active{transform:translateY(0);}
-.player-content-wrapper{flex-grow:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;position:relative;z-index:1;}
+.player-content-wrapper{position:relative;z-index:2;flex-grow:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;}
+
+/* Top Section (Header, Spacer, Controls) */
+.player-top-section { display: flex; flex-direction: column; padding-bottom: 10px; transition: min-height 0.3s ease; }
+.player-top-section.video-active { min-height: 88vh; /* Forces controls down, leaving 12vh for peek */ }
+.video-spacer { display: none; flex-grow: 1; width: 100%; min-height: 5vh; }
+.video-spacer.active { display: block; }
+
 .player-header,.player-details,.progress-container,.controls-row,.secondary-controls{padding-left:16px;padding-right:16px;width:100%;box-sizing:border-box;}
 .player-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-top:20px;position:sticky;top:0;z-index:50;background-color:transparent;transition:background-color 0.3s ease;}
 .player-header i{font-size:24px;cursor:pointer;}
 .player-header .playlist-indicator{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--text-faded);}
 .player-art-container{display:flex;justify-content:center;align-items:center;padding-top:30px;padding-bottom:30px;padding-left:16px;padding-right:16px;}
 .player-art{width:80vw;max-width:350px;aspect-ratio:1 / 1;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.7);transition:all 0.2s ease-out;transform-origin:center center;}
+.player-art-container.hidden-for-video { display: none !important; }
+
+/* Player Details & Mini Art */
 .player-details{margin:0 0 20px 0;display:flex;justify-content:space-between;align-items:flex-end;}
-.player-details h2{margin:0;font-size:24px;font-weight:700; white-space: normal; overflow: visible; text-overflow: clip;}
-.player-details p{margin:2px 0 0 0;font-size:16px;color:var(--text-faded); white-space: normal; overflow: visible; text-overflow: clip;}
+.player-mini-art { display: none; width: 48px; height: 48px; border-radius: 4px; object-fit: cover; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+.player-mini-art.active { display: block; }
+.track-title-scroll { margin:0; font-size:22px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.artist-name-scroll { margin:2px 0 0 0; font-size:15px; color:var(--text-faded); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
 .progress-container{margin-bottom:20px;}
 .time-stamps{display:flex;justify-content:space-between;font-size:12px;color:var(--text-faded);margin-top:5px;}
 
-/* VIDEO CANVAS BACKGROUND STYLES */
+/* Scrollable Bottom Content & Spotify Cards */
+.scrollable-content-bottom { padding-bottom: 80px; position: relative; z-index: 2; transition: background 0.3s ease; }
+/* Intentionally removed the solid black background here so video peeks through gaps */
+.scrollable-content-bottom.video-active { padding-top: 10px; }
+
+.spotify-card {
+    background-color: #242424; border-radius: 12px; margin: 16px; padding: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative;
+}
+.pill-btn {
+    background: white; color: black; font-weight: 700; padding: 8px 16px; 
+    border-radius: 20px; border: none; cursor: pointer; font-size: 14px;
+}
+.pill-btn-outline {
+    background: transparent; color: white; font-weight: 700; padding: 6px 16px; 
+    border-radius: 20px; border: 1px solid white; cursor: pointer; font-size: 14px;
+}
+
+/* Lyrics Preview Card */
+.lyrics-preview-card {
+    background-color: #8c2323; padding: 20px 16px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    transition: background-color 0.5s ease; min-height: 380px;
+}
+.lyrics-header { font-weight: 700; font-size: 16px; }
+.lyrics-content { font-size: 20px; font-weight: 700; line-height: 1.6; margin: 25px 0; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+/* About Artist Card */
+.about-artist-card { padding: 0; overflow: hidden; }
+.about-artist-img-container { position: relative; height: 220px; }
+.about-artist-img-container img { width: 100%; height: 100%; object-fit: cover; }
+.about-artist-badge { position: absolute; top: 16px; left: 16px; font-weight: 700; font-size: 16px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+.about-artist-info { padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+
+/* Credits Card */
+.credit-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.credit-item:last-child { margin-bottom: 0; }
+.credit-info h4 { margin: 0; font-size: 16px; font-weight: 600; }
+.credit-info p { margin: 4px 0 0 0; font-size: 14px; color: var(--text-faded); }
+
+/* FIXED VIDEO CANVAS BACKGROUND */
 .player-video-canvas {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    object-fit: cover; z-index: 0; display: none;
-    filter: brightness(0.65) saturate(1.1); /* Darken slightly to ensure UI readability */
-    pointer-events: none; transition: opacity 0.4s ease;
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    object-fit: cover; z-index: 0; display: none; pointer-events: none;
 }
-.player-video-canvas.active {
-    display: block;
-}
-.video-spacer {
-    display: none; height: 38vh; width: 100%; transition: all 0.3s ease;
-}
-.video-spacer.active {
-    display: block;
-}
-
-/* Fallback for Desktop/Laptops & Landscape orientation (Force Image Mode) */
-@media (min-width: 769px), (orientation: landscape) {
-    .player-video-canvas.active { display: none !important; }
-    .video-spacer.active { display: none !important; }
-    .player-art-container.hidden-for-video { display: flex !important; }
-}
-
-/* Logic for hiding the square album art when video plays */
-.player-art-container.hidden-for-video {
-    display: none !important;
+.video-gradient-overlay {
+    position: fixed; bottom: 0; left: 0; width: 100vw; height: 60vh;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+    z-index: 1; display: none; pointer-events: none;
 }
 
 /* EXACT SPOTIFY CONTROLS */
@@ -158,14 +180,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 .artist-banner-area{height:350px;position:relative;background-size:cover;background-position:center;background-repeat:no-repeat;display:flex;flex-direction:column;justify-content:flex-end;color:white;padding-left:16px;padding-right:16px;padding-bottom:10px;box-shadow:inset 0 -150px 70px -50px rgba(0,0,0,0.7);transition:background-image 0.5s ease;}
 .artist-details-overlay{padding-top:10px;padding-bottom:20px;display:flex;flex-direction:column;gap:5px;transition:opacity 0.2s ease-out;}
 .artist-details-overlay h2{font-size:32px;font-weight:700;margin:0;}
-#artistPopularTracks .track-item, .artist-page-track .track-item{ display:grid; grid-template-columns:25px 1fr 40px; gap:15px; padding:8px 16px; }
-#artistPopularTracks .track-item .track-img, .artist-page-track .track-item .track-img{display:none;} 
+.artist-page-track .track-item{ display:grid; grid-template-columns:25px 1fr 40px; gap:15px; padding:8px 16px; }
+.artist-page-track .track-item .track-img{display:none;} 
 .track-number{font-size:16px;color:var(--text-faded);display:flex;align-items:center;justify-content:center;}
-#artistPopularTracks .track-info h3, .artist-page-track .track-info h3 { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2;}
-#artistPopularTracks .track-info p, .artist-page-track .track-info p{ font-size:13px; color:var(--text-faded); white-space: normal; overflow: visible; text-overflow: clip;}
+.artist-page-track .track-info h3 { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2;}
+.artist-page-track .track-info p{ font-size:13px; color:var(--text-faded); white-space: normal; overflow: visible; text-overflow: clip;}
 .track-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;}
 .track-controls i{color:var(--text-faded);font-size:18px;}
-.popular-title {padding: 0 16px;font-size: 20px;font-weight: 700;margin-top: 20px;margin-bottom: 0;}
 
 /* Liked Songs Card/Playlist */
 .liked-songs-card { display: flex; align-items: center; padding: 8px 16px; cursor: pointer; }
@@ -201,9 +222,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
     border: 1px solid var(--glass-border-color);
 }
 .mini-player.active{transform:translateY(0);}
-.mini-track-info{flex-grow:1;padding:0 10px;}
+.mini-track-info{flex-grow:1;padding:0 10px; overflow:hidden;}
 .mini-track-info h4{margin:0;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.mini-track-info p{margin:0;font-size:12px;color:var(--text-faded);}
+.mini-track-info p{margin:0;font-size:12px;color:var(--text-faded);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .mini-controls button{
     background:none;border:none;color:white;font-size:24px;cursor:pointer;padding:0 5px;
     transition: transform 0.1s ease;
@@ -248,9 +269,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 <body>
 
 <!-- FAST SMOOTH LOADER -->
-<div id="preLoader" style="background: var(--spotify-black); z-index: 1000; position: fixed; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease-out;">
+<div id="preLoader" style="background: var(--spotify-black); z-index: 9999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease-out;">
     <img src="s512.png" alt="Totify" style="width: 100px; height: 100px; border-radius: 20px; animation: smoothFade 1s infinite alternate;">
 </div>
+
+<script>
+    window.loaderRemoved = false;
+    window.hidePreLoader = function() {
+        if(window.loaderRemoved) return;
+        window.loaderRemoved = true;
+        const preLoader = document.getElementById('preLoader');
+        if(preLoader) {
+            preLoader.style.opacity = '0';
+            setTimeout(() => { preLoader.style.display = 'none'; }, 300);
+        }
+    };
+    setTimeout(window.hidePreLoader, 2000); 
+</script>
 
 <audio id="mainAudio" preload="auto"></audio> 
 <audio id="preloadNext" preload="auto" muted></audio>
@@ -283,61 +318,106 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 
 <div class="expanded-player" id="expandedPlayer">
     
-    <!-- BACKGROUND LOOPING VIDEO FOR MOBILE -->
+    <!-- BACKGROUND LOOPING VIDEO FOR MOBILE (FIXED POSITION) -->
     <video id="playerVideoCanvas" class="player-video-canvas" loop muted playsinline></video>
+    <div id="videoGradientOverlay" class="video-gradient-overlay"></div>
 
     <div class="player-content-wrapper" id="scrollContentWrapper">
-        <div class="player-header">
-            <i class="fas fa-chevron-down" id="minimizeBtn"></i>
-            <div class="playlist-indicator">PLAYING<br><span id="playerTitleSmall" style="color:white; font-size:14px;"></span></div>
-            <i class="fas fa-ellipsis-v"></i>
-        </div>
         
-        <!-- Pushes UI to the bottom over the video canvas if active -->
-        <div class="video-spacer" id="videoSpacer"></div>
-
-        <div class="player-art-container">
-            <img class="player-art" id="playerArt" src="" alt="Album Art" crossorigin="anonymous">
-        </div>
-        <div class="player-details">
-            <div><h2 id="playerTrackTitle"></h2><p id="playerArtistName"></p></div>
-            <i class="far fa-heart" id="likeBtn" style="color:white; font-size:24px; cursor:pointer;"></i>
-        </div>
-        <div class="progress-container">
-            <input type="range" id="playerProgress" min="0" max="100" value="0">
-            <div class="time-stamps"><span id="currentTime">0:00</span><span id="totalTime">0:00</span></div>
-        </div>
-        
-        <!-- NEW EXACT SPOTIFY CONTROLS -->
-        <div class="controls-row">
-            <button id="shuffleBtn" style="color: var(--spotify-green);"><i class="fas fa-random"></i></button>
-            <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
-            <button class="main-play" id="mainPlayBtn"><i class="fas fa-play" style="padding-left: 2px;"></i></button>
-            <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
-            <button id="repeatBtn"><i class="far fa-clock"></i></button>
-        </div>
-        <div class="secondary-controls">
-            <button><i class="fas fa-laptop-house"></i></button>
-            <div class="right-controls">
-                <button><i class="fas fa-share-alt"></i></button>
-                <button><i class="fas fa-list-ul"></i></button>
+        <!-- TOP SECTION: Controls & Art (Pushed down when video active) -->
+        <div class="player-top-section" id="playerTopSection">
+            <div class="player-header" id="playerHeaderObj">
+                <i class="fas fa-chevron-down" id="minimizeBtn"></i>
+                <div class="playlist-indicator">PLAYING<br><span id="playerTitleSmall" style="color:white; font-size:14px;"></span></div>
+                <i class="fas fa-ellipsis-v"></i>
             </div>
-        </div>
+            
+            <!-- Flexible Spacer pushing UI down over video -->
+            <div class="video-spacer" id="videoSpacer"></div>
 
-        <div class="scrollable-content">
-            <div class="artist-card-expanded">
-                <div class="artist-banner-area" id="artistBannerArea">
-                    <div class="artist-details-overlay">
-                        <h2 id="expandedArtistName"></h2>
-                        <p id="expandedMonthlyListeners">6.2 Cr monthly listeners</p>
-                        <button class="follow-btn-large" id="bannerFollowBtn" style="align-self:flex-start;padding:10px 30px;border:1px solid white;border-radius:25px;color:white;background:none;font-weight:700;cursor:pointer;text-transform:uppercase;font-size:14px;margin-top:15px;">Follow</button>
+            <div class="player-art-container">
+                <img class="player-art" id="playerArt" src="" alt="Album Art" crossorigin="anonymous">
+            </div>
+            
+            <div class="player-controls-container">
+                <div class="player-details">
+                    <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+                        <!-- Mini Art exactly like Spotify Canvas -->
+                        <img id="playerMiniArt" class="player-mini-art" src="" crossorigin="anonymous">
+                        <div style="min-width:0; overflow:hidden;">
+                            <h2 id="playerTrackTitle" class="track-title-scroll"></h2>
+                            <p id="playerArtistName" class="artist-name-scroll"></p>
+                        </div>
+                    </div>
+                    <i class="far fa-heart" id="likeBtn" style="color:white; font-size:24px; cursor:pointer; margin-left: 10px; flex-shrink: 0;"></i>
+                </div>
+                
+                <div class="progress-container">
+                    <input type="range" id="playerProgress" min="0" max="100" value="0">
+                    <div class="time-stamps"><span id="currentTime">0:00</span><span id="totalTime">0:00</span></div>
+                </div>
+                
+                <div class="controls-row">
+                    <button id="shuffleBtn" style="color: var(--spotify-green);"><i class="fas fa-random"></i></button>
+                    <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
+                    <button class="main-play" id="mainPlayBtn"><i class="fas fa-play" style="padding-left: 2px;"></i></button>
+                    <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
+                    <button id="repeatBtn"><i class="far fa-clock"></i></button>
+                </div>
+                <div class="secondary-controls">
+                    <button><i class="fas fa-laptop-house"></i></button>
+                    <div class="right-controls">
+                        <button><i class="fas fa-share-alt"></i></button>
+                        <button><i class="fas fa-list-ul"></i></button>
                     </div>
                 </div>
             </div>
-            <h3 class="popular-title" style="padding:16px;font-size:20px;font-weight:700;margin-top:20px;margin-bottom:0;">Popular</h3>
-            <ul class="track-list" id="artistPopularTracks"></ul>
-            <div class="artist-pick-section"><h3 class="popular-title" style="padding:16px;font-size:20px;font-weight:700;margin-top:20px;margin-bottom:0;">Artist Pick</h3><div style="padding: 0 16px;"><div style="height: 100px; background: #282828; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: var(--text-faded);"><p>Artist Pick Playlist Placeholder</p></div></div></div>
-            <div style="height: 100px;"></div> 
+        </div>
+
+        <!-- BOTTOM SECTION: Transparent background, cards float over video -->
+        <div class="scrollable-content-bottom" id="scrollableContentBottom">
+            
+            <!-- 1. Lyrics Preview Card -->
+            <div id="lyricsPreviewCard" class="spotify-card lyrics-preview-card">
+                <div>
+                    <div class="lyrics-header">Lyrics preview</div>
+                    <div class="lyrics-content">
+                        നിലാവിന്റെ വെളിച്ചത്തിൽ...<br>
+                        മനസ്സിലെ, മേൽത്തട്ടും കൈകേറിയ അവതാരം<br>
+                        അംശമായി തീരാനേ...
+                    </div>
+                </div>
+                <div style="align-self: flex-start;">
+                    <button class="pill-btn">Show lyrics</button>
+                </div>
+            </div>
+
+            <!-- 2. About Artist Card -->
+            <div class="spotify-card about-artist-card">
+                <div class="about-artist-img-container">
+                    <img id="aboutArtistImg" src="" crossorigin="anonymous">
+                    <span class="about-artist-badge">About the artist</span>
+                </div>
+                <div class="about-artist-info">
+                    <div>
+                        <h3 id="aboutArtistName" style="margin:0; font-size: 18px;"></h3>
+                        <p style="margin:4px 0 0 0; color:var(--text-faded); font-size:14px;">33.4L monthly listeners</p>
+                    </div>
+                    <button class="pill-btn-outline">Follow</button>
+                </div>
+            </div>
+
+            <!-- 3. Credits Card -->
+            <div class="spotify-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+                    <span style="font-weight:700; font-size:18px;">Credits</span>
+                    <span style="font-size:14px; font-weight:600; color:var(--text-faded);">Show all</span>
+                </div>
+                <div id="creditsList">
+                    <!-- Dynamic Artist Credits injected here -->
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -353,7 +433,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
     <span class="icon-text">FLAC</span>
 </div>
 
-<div class="footer-nav">
+<div class="footer-nav" id="footerNav">
     <div class="nav-item" data-page="homePage"><i class="fas fa-home"></i><span>Home</span></div>
     <div class="nav-item" data-page="searchPage"><i class="fas fa-search"></i><span>Search</span></div>
     <div class="nav-item active" data-page="libraryPage"><i class="fas fa-book"></i><span>Your Library</span></div>
@@ -361,8 +441,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 </div>
 
 <script type="module">
-import { initializeApp } from "[https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js](https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js)";
-import { getFirestore, collection, getDocs } from "[https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js](https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js)";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC9rehsf-0jkb9dAeT1-0Z1C-yRJ0YI9dA", authDomain: "gymnm-ce84b.firebaseapp.com", projectId: "gymnm-ce84b",
@@ -381,32 +461,22 @@ let currentFormat = localStorage.getItem('totify_audio_format') || 'flac';
 
 const musicContainer = document.getElementById('musicContainer'); const artistContainer = document.getElementById('artistContainer');
 const tracksByArtistContainer = document.getElementById('tracksByArtistContainer'); const likedSongsPlaylistContainer = document.getElementById('likedSongsPlaylistContainer');
-const artistPopularTracksContainer = document.getElementById('artistPopularTracks'); const filterTabs = document.querySelectorAll('.library-filter-tabs .filter-tab');
+const filterTabs = document.querySelectorAll('.library-filter-tabs .filter-tab');
 const libraryControls = document.getElementById('libraryControls'); const expandedPlayer = document.getElementById('expandedPlayer');
 const miniPlayer = document.getElementById('miniPlayer'); const mainPlayBtn = document.getElementById('mainPlayBtn');
 const miniPlayBtn = document.getElementById('miniPlayBtn'); const footerNavItems = document.querySelectorAll('.nav-item');
 const searchInput = document.getElementById('searchInput'); const searchResultsContainer = document.getElementById('searchResultsContainer');
 const browsingSection = document.getElementById('browsingSection'); const scrollContentWrapper = document.getElementById('scrollContentWrapper');
-const playerArt = document.getElementById('playerArt'); const playerHeader = document.querySelector('.player-header');
+const playerArt = document.getElementById('playerArt'); const playerHeaderObj = document.getElementById('playerHeaderObj');
 const playerProgress = document.getElementById('playerProgress'); const currentTimeDisplay = document.getElementById('currentTime');
 const totalTimeDisplay = document.getElementById('totalTime'); const mainLibHeader = document.getElementById('mainLibHeader');
 const mainLibTabs = document.getElementById('mainLibTabs'); const likeBtn = document.getElementById('likeBtn'); 
 const formatSwitchBtn = document.getElementById('formatSwitchBtn');
+const footerNav = document.getElementById('footerNav');
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(e => console.error('SW failed:', e)); });
 }
-
-// Ensure preloader fully removes itself within 2 seconds
-let loaderRemoved = false;
-function hidePreLoader() {
-    if(loaderRemoved) return;
-    loaderRemoved = true;
-    const preLoader = document.getElementById('preLoader');
-    preLoader.style.opacity = '0';
-    setTimeout(() => { preLoader.style.display = 'none'; }, 300);
-}
-setTimeout(hidePreLoader, 2000); 
 
 function updateDynamicColors(imgElement) {
     try {
@@ -424,6 +494,11 @@ function updateDynamicColors(imgElement) {
         miniPlayer.style.backgroundColor = glassColor;
         expandedPlayer.style.background = `linear-gradient(to bottom, ${vibrantColor} 0%, #000 100%)`;
         document.querySelector('meta[name="theme-color"]').setAttribute('content', vibrantColor);
+
+        // Make Lyrics peek card match song color
+        const lyricsCard = document.getElementById('lyricsPreviewCard');
+        if(lyricsCard) lyricsCard.style.backgroundColor = vibrantColor;
+
     } catch (e) {
         miniPlayer.style.backgroundColor = "rgba(40, 40, 40, 0.4)";
         expandedPlayer.style.background = `linear-gradient(to bottom, rgb(35, 120, 95) 0%, #000 100%)`;
@@ -471,7 +546,7 @@ function updateLikeButtonUI(trackIndex) {
 }
 
 function updatePlaylistView() {
-    const containers = [musicContainer, searchResultsContainer, tracksByArtistContainer, likedSongsPlaylistContainer, artistPopularTracksContainer];
+    const containers = [musicContainer, searchResultsContainer, tracksByArtistContainer, likedSongsPlaylistContainer];
     containers.forEach(container => {
         if(!container) return;
         container.querySelectorAll('.track-item').forEach(item => {
@@ -543,7 +618,7 @@ async function loadTrack(index, autoPlay = true, seekTime = 0) {
     const primaryArtist = track.primaryArtist; 
     const artistData = allArtists.get(primaryArtist.toLowerCase());
     
-    // UI Update hooks
+    // Top Player UI Update hooks
     playerArt.src = imageSource; playerArt.onload = () => updateDynamicColors(playerArt);
     document.getElementById('playerTrackTitle').textContent = track.title;
     document.getElementById('playerArtistName').textContent = fullArtistList; 
@@ -553,36 +628,63 @@ async function loadTrack(index, autoPlay = true, seekTime = 0) {
     document.getElementById('miniArtist').textContent = fullArtistList;
     miniPlayer.classList.add('active'); 
 
-    // Mobile Video Canvas Injection & Toggling
+    // Inject bottom section data dynamically 
+    document.getElementById('aboutArtistImg').src = artistData && artistData.image_url ? artistData.image_url : imageSource;
+    document.getElementById('aboutArtistName').innerHTML = `${primaryArtist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
+    
+    // Inject Credits list dynamically
+    const creditsList = document.getElementById('creditsList');
+    creditsList.innerHTML = '';
+    track.artists.forEach((artistName, idx) => {
+        const role = idx === 0 ? 'Main Artist • Composer' : 'Feature Artist';
+        creditsList.innerHTML += `
+            <div class="credit-item">
+                <div class="credit-info">
+                    <h4>${artistName}</h4>
+                    <p>${role}</p>
+                </div>
+                <button class="pill-btn-outline">Follow</button>
+            </div>
+        `;
+    });
+
+    // Mobile Video Canvas Activation & Toggling
     const videoCanvas = document.getElementById('playerVideoCanvas');
+    const gradientOverlay = document.getElementById('videoGradientOverlay');
     const artContainer = document.querySelector('.player-art-container');
     const videoSpacer = document.getElementById('videoSpacer');
+    const playerMiniArt = document.getElementById('playerMiniArt');
+    const topSection = document.getElementById('playerTopSection');
+    const scrollContentBottom = document.getElementById('scrollableContentBottom');
 
-    if (track.video_url) {
+    if (track.video_url && window.innerWidth < 768) {
         videoCanvas.src = track.video_url;
-        videoCanvas.classList.add('active');
+        videoCanvas.style.display = 'block';
+        gradientOverlay.style.display = 'block';
+        
         videoSpacer.classList.add('active');
         artContainer.classList.add('hidden-for-video');
-        videoCanvas.play().catch(e => console.log('Video autoplay blocked by browser', e));
+        playerMiniArt.src = imageSource; 
+        playerMiniArt.classList.add('active');
+        topSection.classList.add('video-active');
+        scrollContentBottom.classList.add('video-active');
+        
+        videoCanvas.play().catch(e => console.log('Video autoplay blocked', e));
     } else {
-        videoCanvas.classList.remove('active');
+        videoCanvas.style.display = 'none';
+        gradientOverlay.style.display = 'none';
+        
         videoSpacer.classList.remove('active');
         artContainer.classList.remove('hidden-for-video');
+        playerMiniArt.classList.remove('active');
+        topSection.classList.remove('video-active');
+        scrollContentBottom.classList.remove('video-active');
+        
         videoCanvas.pause();
         videoCanvas.removeAttribute('src');
         videoCanvas.load();
     }
 
-    document.getElementById('expandedArtistName').innerHTML = `${primaryArtist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
-    const artistBannerArea = document.getElementById('artistBannerArea');
-    if (artistData && artistData.image_url) {
-         artistBannerArea.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.7)), url('${artistData.image_url}')`;
-         artistBannerArea.style.backgroundColor = 'transparent';
-    } else {
-         artistBannerArea.style.backgroundImage = 'none'; artistBannerArea.style.backgroundColor = '#303030';
-    }
-
-    renderExpandedPlayerPopularTracks(primaryArtist); 
     playerProgress.value = 0; currentTimeDisplay.textContent = formatTime(seekTime);
     totalTimeDisplay.textContent = formatTime(track.duration || 0); 
     
@@ -601,7 +703,6 @@ function togglePlayPause() {
     if (isLoading) return; 
     if (currentTrackIndex === -1 && allTracks.length > 0) { loadTrack(allTracks[0].index, true); return; }
     if (isPlaying) { currentAudio.pause(); } else { currentAudio.play().catch(e => console.error("Play failed:", e)); }
-    // Intentionally leaving the background video alone here so it continuously loops as requested
 }
 
 function nextTrack() {
@@ -626,14 +727,20 @@ function seekTrack(progressValue) {
 mainPlayBtn.addEventListener('click', togglePlayPause); miniPlayBtn.addEventListener('click', togglePlayPause);
 document.getElementById('nextBtn').addEventListener('click', nextTrack); document.getElementById('prevBtn').addEventListener('click', prevTrack);
 
-// Clean opening and closing transitions for Expanded Player avoiding overlap
+// Clean opening and closing transitions
 function openExpandedPlayer() {
-    expandedPlayer.classList.add('active'); document.body.classList.add('lock-scroll'); expandedPlayer.style.transform = ''; 
-    miniPlayer.style.opacity = '0'; miniPlayer.style.pointerEvents = 'none'; // hide perfectly
+    expandedPlayer.classList.add('active'); 
+    document.body.classList.add('lock-scroll'); 
+    expandedPlayer.style.transform = ''; 
+    miniPlayer.style.opacity = '0'; miniPlayer.style.pointerEvents = 'none'; 
+    footerNav.style.display = 'none'; // Forces Nav bar to hide immediately
 }
 function closeExpandedPlayer() {
-    expandedPlayer.classList.remove('active'); document.body.classList.remove('lock-scroll'); expandedPlayer.style.transform = ''; 
-    miniPlayer.style.opacity = '1'; miniPlayer.style.pointerEvents = 'auto'; // bring back perfectly
+    expandedPlayer.classList.remove('active'); 
+    document.body.classList.remove('lock-scroll'); 
+    expandedPlayer.style.transform = ''; 
+    miniPlayer.style.opacity = '1'; miniPlayer.style.pointerEvents = 'auto'; 
+    footerNav.style.display = 'flex'; // Brings Nav bar back
 }
 
 document.getElementById('minimizeBtn').addEventListener('click', closeExpandedPlayer);
@@ -747,13 +854,6 @@ function showTracksByArtist(artistName) {
     pageContent.appendChild(listUl); tracksByArtistContainer.appendChild(pageContent);
 }
 
-function renderExpandedPlayerPopularTracks(artistName) {
-    const container = document.getElementById('artistPopularTracks'); container.innerHTML = '';
-    allTracks.filter(t => t.primaryArtist.toLowerCase() === artistName.toLowerCase()).slice(0, 6).forEach((data, index) => {
-        container.appendChild(createTrackListItem(data, 'expandedPlayerPopular', index + 1));
-    });
-}
-
 let startX = 0; let startY = 0; let isVerticalDrag = false; let isHorizontalDrag = false; const SWIPE_THRESHOLD_Y = 100; const SWIPE_THRESHOLD_X = 50;
 document.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1 && expandedPlayer.classList.contains('active')) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isVerticalDrag = false; isHorizontalDrag = false; expandedPlayer.classList.add('is-dragging'); }
@@ -780,10 +880,12 @@ document.addEventListener('touchend', (e) => {
     }
     isVerticalDrag = false; isHorizontalDrag = false;
 }, { passive: true });
+
 scrollContentWrapper.addEventListener('scroll', () => {
     const scrollTop = scrollContentWrapper.scrollTop;
-    playerArt.style.transform = `scale(${Math.max(0.7, 1 - (scrollTop / 500))})`; playerArt.style.opacity = Math.max(0, 1 - (scrollTop / 200));
-    playerHeader.style.backgroundColor = `rgba(18, 18, 18, ${Math.min(1, scrollTop / 150)})`;
+    playerArt.style.transform = `scale(${Math.max(0.7, 1 - (scrollTop / 500))})`; 
+    playerArt.style.opacity = Math.max(0, 1 - (scrollTop / 200));
+    playerHeaderObj.style.backgroundColor = `rgba(18, 18, 18, ${Math.min(1, scrollTop / 150)})`;
 });
 
 footerNavItems.forEach(item => {
@@ -797,13 +899,12 @@ async function loadMusicAndArtists() {
     try {
          const musicSnapshot = await getDocs(collection(db, "music")); let index = 0;
          musicSnapshot.forEach(doc => { const data = doc.data(); const artists = Array.isArray(data.artists) ? data.artists.map(a => a.name) : [data.artist || "Unknown"];
-             // PULLS video_url OR video IF PRESENT FROM FIREBASE IN THE MAPPING BELOW 
              allTracks.push({ ...data, index: index++, artists, primaryArtist: artists[0], duration: data.duration || 180, image_url: data.image_url || data.image || data.image_base64 || "s512.png", video_url: data.video_url || data.video || null });
          });
          const artistSnapshot = await getDocs(collection(db, "artists"));
          artistSnapshot.forEach(doc => { const data = doc.data(); allArtists.set(data.name.toLowerCase(), { ...data, image_url: data.image_url || data.image_base64_highres || data.image_base64 || data.image || "s512.png" }); });
-         loadMusic(); hidePreLoader(); 
-    } catch (error) { hidePreLoader(); }
+         loadMusic(); window.hidePreLoader(); 
+    } catch (error) { window.hidePreLoader(); console.error(error); }
 }
 
 loadLikedData(); loadMusicAndArtists();
