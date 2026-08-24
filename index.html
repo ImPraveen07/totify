@@ -2,11 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta property="og:title" content="Totify"><metaHere is the fully updated code. I have integrated the Spotify Canvas-style video loop feature exactly as you requested. 
+
+### What's added:
+1. **Full-Screen Video Canvas**: If the song has a `video_url` (or `video`), it replaces the album art and takes over the expanded player background with a `1080x1920` (Insta reel ratio) format.
+2. **Device Detection**: Using CSS Media Queries, it will **only** activate on mobile devices in portrait mode. If opened on a PC, laptop, or landscape orientation, it automatically falls back to the standard album art image.
+3. **Continuous Background Playback**: The video is set to loop endlessly and is completely decoupled from the audio playback state. If you pause the music, the visuals will continue to play uninterrupted.
+4. **Spotify-Style Layout**: When the video is active, a layout spacer dynamically pushes the song title, playback controls, and lyrics/menus to the bottom of the screen to lay cleanly over the video (exactly like the reference image).
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <meta property="og:title" content="Totify"><meta property="og:description" content="Listen to music like Spotify. Your music library and more."><meta property="og:image" content="/s512.png"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Totify</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="[https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap)" rel="stylesheet">
+<link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css)">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" sizes="180x180" href="/s192.png"><link rel="apple-touch-icon" sizes="512x512" href="/s512.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#1db954">
@@ -72,7 +85,7 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);col
 .expanded-player{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, rgb(35, 120, 95) 0%, var(--bg-darker) 100%);z-index:100;display:flex;flex-direction:column;padding:0;box-sizing:border-box;transition:transform var(--transition-premium),background 0.5s ease;transform:translateY(100%);}
 .expanded-player.is-dragging{transition:none;}
 .expanded-player.active{transform:translateY(0);}
-.player-content-wrapper{flex-grow:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;}
+.player-content-wrapper{flex-grow:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;position:relative;z-index:1;}
 .player-header,.player-details,.progress-container,.controls-row,.secondary-controls{padding-left:16px;padding-right:16px;width:100%;box-sizing:border-box;}
 .player-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-top:20px;position:sticky;top:0;z-index:50;background-color:transparent;transition:background-color 0.3s ease;}
 .player-header i{font-size:24px;cursor:pointer;}
@@ -84,6 +97,35 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);col
 .player-details p{margin:2px 0 0 0;font-size:16px;color:var(--text-faded); white-space: normal; overflow: visible; text-overflow: clip;}
 .progress-container{margin-bottom:20px;}
 .time-stamps{display:flex;justify-content:space-between;font-size:12px;color:var(--text-faded);margin-top:5px;}
+
+/* VIDEO CANVAS BACKGROUND STYLES */
+.player-video-canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: 0; display: none;
+    filter: brightness(0.65) saturate(1.1); /* Darken slightly to ensure UI readability */
+    pointer-events: none; transition: opacity 0.4s ease;
+}
+.player-video-canvas.active {
+    display: block;
+}
+.video-spacer {
+    display: none; height: 38vh; width: 100%; transition: all 0.3s ease;
+}
+.video-spacer.active {
+    display: block;
+}
+
+/* Fallback for Desktop/Laptops & Landscape orientation (Force Image Mode) */
+@media (min-width: 769px), (orientation: landscape) {
+    .player-video-canvas.active { display: none !important; }
+    .video-spacer.active { display: none !important; }
+    .player-art-container.hidden-for-video { display: flex !important; }
+}
+
+/* Logic for hiding the square album art when video plays */
+.player-art-container.hidden-for-video {
+    display: none !important;
+}
 
 /* EXACT SPOTIFY CONTROLS */
 .controls-row {
@@ -240,12 +282,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 </div>
 
 <div class="expanded-player" id="expandedPlayer">
-    <div class="player-content-wrapper">
+    
+    <!-- BACKGROUND LOOPING VIDEO FOR MOBILE -->
+    <video id="playerVideoCanvas" class="player-video-canvas" loop muted playsinline></video>
+
+    <div class="player-content-wrapper" id="scrollContentWrapper">
         <div class="player-header">
             <i class="fas fa-chevron-down" id="minimizeBtn"></i>
             <div class="playlist-indicator">PLAYING<br><span id="playerTitleSmall" style="color:white; font-size:14px;"></span></div>
             <i class="fas fa-ellipsis-v"></i>
         </div>
+        
+        <!-- Pushes UI to the bottom over the video canvas if active -->
+        <div class="video-spacer" id="videoSpacer"></div>
+
         <div class="player-art-container">
             <img class="player-art" id="playerArt" src="" alt="Album Art" crossorigin="anonymous">
         </div>
@@ -311,8 +361,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { initializeApp } from "[https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js](https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js)";
+import { getFirestore, collection, getDocs } from "[https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js](https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js)";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC9rehsf-0jkb9dAeT1-0Z1C-yRJ0YI9dA", authDomain: "gymnm-ce84b.firebaseapp.com", projectId: "gymnm-ce84b",
@@ -336,7 +386,7 @@ const libraryControls = document.getElementById('libraryControls'); const expand
 const miniPlayer = document.getElementById('miniPlayer'); const mainPlayBtn = document.getElementById('mainPlayBtn');
 const miniPlayBtn = document.getElementById('miniPlayBtn'); const footerNavItems = document.querySelectorAll('.nav-item');
 const searchInput = document.getElementById('searchInput'); const searchResultsContainer = document.getElementById('searchResultsContainer');
-const browsingSection = document.getElementById('browsingSection'); const scrollContentWrapper = document.querySelector('.player-content-wrapper');
+const browsingSection = document.getElementById('browsingSection'); const scrollContentWrapper = document.getElementById('scrollContentWrapper');
 const playerArt = document.getElementById('playerArt'); const playerHeader = document.querySelector('.player-header');
 const playerProgress = document.getElementById('playerProgress'); const currentTimeDisplay = document.getElementById('currentTime');
 const totalTimeDisplay = document.getElementById('totalTime'); const mainLibHeader = document.getElementById('mainLibHeader');
@@ -368,7 +418,6 @@ function updateDynamicColors(imgElement) {
         for (let i = 0; i < data.length; i += 4) { r += data[i]; g += data[i+1]; b += data[i+2]; }
         r = Math.floor(r / (data.length / 4)); g = Math.floor(g / (data.length / 4)); b = Math.floor(b / (data.length / 4));
 
-        // Use rgb (not rgba) for full opacity to prevent transparency background bugs
         const vibrantColor = `rgb(${r}, ${g}, ${b})`;
         const glassColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
         
@@ -384,7 +433,6 @@ function updateDynamicColors(imgElement) {
 function loadLikedData() {
     try { const storedLikes = localStorage.getItem('totify_liked_tracks'); if (storedLikes) { likedTrackIndexes = JSON.parse(storedLikes); } } catch (e) {}
 }
-
 function saveLikedData() {
     try { localStorage.setItem('totify_liked_tracks', JSON.stringify(likedTrackIndexes)); } catch (e) {}
 }
@@ -397,7 +445,6 @@ function formatTime(seconds) {
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 }
 
-// Play triangle perfectly centered visually
 function updatePlayButtonUI(state) {
     if (state === "loading") {
         mainPlayBtn.style.opacity = '0.5'; isLoading = true;
@@ -496,8 +543,8 @@ async function loadTrack(index, autoPlay = true, seekTime = 0) {
     const primaryArtist = track.primaryArtist; 
     const artistData = allArtists.get(primaryArtist.toLowerCase());
     
+    // UI Update hooks
     playerArt.src = imageSource; playerArt.onload = () => updateDynamicColors(playerArt);
-
     document.getElementById('playerTrackTitle').textContent = track.title;
     document.getElementById('playerArtistName').textContent = fullArtistList; 
     document.getElementById('playerTitleSmall').textContent = track.title;
@@ -505,6 +552,26 @@ async function loadTrack(index, autoPlay = true, seekTime = 0) {
     document.getElementById('miniTitle').textContent = track.title;
     document.getElementById('miniArtist').textContent = fullArtistList;
     miniPlayer.classList.add('active'); 
+
+    // Mobile Video Canvas Injection & Toggling
+    const videoCanvas = document.getElementById('playerVideoCanvas');
+    const artContainer = document.querySelector('.player-art-container');
+    const videoSpacer = document.getElementById('videoSpacer');
+
+    if (track.video_url) {
+        videoCanvas.src = track.video_url;
+        videoCanvas.classList.add('active');
+        videoSpacer.classList.add('active');
+        artContainer.classList.add('hidden-for-video');
+        videoCanvas.play().catch(e => console.log('Video autoplay blocked by browser', e));
+    } else {
+        videoCanvas.classList.remove('active');
+        videoSpacer.classList.remove('active');
+        artContainer.classList.remove('hidden-for-video');
+        videoCanvas.pause();
+        videoCanvas.removeAttribute('src');
+        videoCanvas.load();
+    }
 
     document.getElementById('expandedArtistName').innerHTML = `${primaryArtist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
     const artistBannerArea = document.getElementById('artistBannerArea');
@@ -534,6 +601,7 @@ function togglePlayPause() {
     if (isLoading) return; 
     if (currentTrackIndex === -1 && allTracks.length > 0) { loadTrack(allTracks[0].index, true); return; }
     if (isPlaying) { currentAudio.pause(); } else { currentAudio.play().catch(e => console.error("Play failed:", e)); }
+    // Intentionally leaving the background video alone here so it continuously loops as requested
 }
 
 function nextTrack() {
@@ -729,7 +797,8 @@ async function loadMusicAndArtists() {
     try {
          const musicSnapshot = await getDocs(collection(db, "music")); let index = 0;
          musicSnapshot.forEach(doc => { const data = doc.data(); const artists = Array.isArray(data.artists) ? data.artists.map(a => a.name) : [data.artist || "Unknown"];
-             allTracks.push({ ...data, index: index++, artists, primaryArtist: artists[0], duration: data.duration || 180, image_url: data.image_url || data.image || data.image_base64 || "s512.png" });
+             // PULLS video_url OR video IF PRESENT FROM FIREBASE IN THE MAPPING BELOW 
+             allTracks.push({ ...data, index: index++, artists, primaryArtist: artists[0], duration: data.duration || 180, image_url: data.image_url || data.image || data.image_base64 || "s512.png", video_url: data.video_url || data.video || null });
          });
          const artistSnapshot = await getDocs(collection(db, "artists"));
          artistSnapshot.forEach(doc => { const data = doc.data(); allArtists.set(data.name.toLowerCase(), { ...data, image_url: data.image_url || data.image_base64_highres || data.image_base64 || data.image || "s512.png" }); });
