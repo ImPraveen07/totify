@@ -37,7 +37,7 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);col
     background: #ffffff; color: #000000; padding: 12px 24px; border-radius: 50px;
     font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     z-index: 9999; opacity: 0; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    pointer-events: none; text-align: center; white-space: nowrap;
+    pointer-events: none; text-align: center; white-space: normal; width: 90%; max-width: 350px;
 }
 .toast-notification.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
@@ -195,13 +195,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 }
 .download-modal h3 { margin: 0 0 5px 0; font-size: 18px; }
 .download-modal p { margin: 0 0 20px 0; font-size: 13px; color: var(--text-faded); }
+
 .download-btn {
     display: block; width: 100%; padding: 14px; margin: 10px 0;
     background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 25px; font-weight: 700; font-size: 15px; cursor: pointer;
+    border-radius: 25px; font-weight: 700; font-size: 14px; cursor: pointer;
 }
 .download-btn:active { background: rgba(255,255,255,0.2); }
-.download-btn.flac-btn { background: #1db954; color: black; border:none; }
+.download-btn.app-btn { background: #1db954; color: black; border:none; }
 .download-btn.remove-btn { background: #e22134; color: white; border:none; }
 
 /* Playlist Views */
@@ -247,7 +248,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
             setTimeout(() => { preLoader.style.display = 'none'; }, 300);
         }
     };
-    // Failsafe timer just in case offline logic or db takes too long
     setTimeout(window.hidePreLoader, 3000); 
 </script>
 
@@ -259,11 +259,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 <div id="downloadModal" class="download-modal">
     <div class="download-modal-content">
         <h3 id="dlModalTitle">Download Song</h3>
-        <p id="dlModalDesc">Listen offline anytime.</p>
+        <p id="dlModalDesc">Choose how you want to download.</p>
         
-        <button class="download-btn" id="dlMp3Btn">Download MP3</button>
-        <button class="download-btn flac-btn" id="dlFlacBtn">Download FLAC <span id="dlVideoStatus"></span></button>
-        <button class="download-btn remove-btn" id="dlRemoveBtn" style="display:none;">Remove Download</button>
+        <button class="download-btn app-btn" id="dlAppBtn">Download to App (Offline Playlist)</button>
+        <button class="download-btn" id="dlDeviceBtn">Download to Device (Files / Private)</button>
+        <button class="download-btn remove-btn" id="dlRemoveBtn" style="display:none;">Remove from App Storage</button>
         
         <button class="download-btn" style="background: transparent; border: none; margin-top: 15px;" onclick="closeDownloadModal()">Cancel</button>
     </div>
@@ -457,7 +457,7 @@ let toastTimeout;
 function showNotification(msg) {
     const toast = document.getElementById('toastNotification');
     toast.innerText = msg; toast.classList.add('show');
-    clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+    clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.classList.remove('show'), 3500);
 }
 
 // DRAGGABLE FLAC/MP3 BUTTON
@@ -533,11 +533,11 @@ function renderFullLyricsView(lyricsData) {
 function loadSavedData() { 
     try { 
         const storedLikes = localStorage.getItem('totify_liked_tracks'); if (storedLikes) { likedTrackIndexes = JSON.parse(storedLikes); } 
-        const storedDLs = localStorage.getItem('totify_downloads'); if (storedDLs) { downloadedTracks = JSON.parse(storedDLs); }
+        const storedDLs = localStorage.getItem('totify_downloads_meta'); if (storedDLs) { downloadedTracks = JSON.parse(storedDLs); }
     } catch (e) {} 
 }
 function saveLikedData() { try { localStorage.setItem('totify_liked_tracks', JSON.stringify(likedTrackIndexes)); } catch (e) {} }
-function saveDownloads() { try { localStorage.setItem('totify_downloads', JSON.stringify(downloadedTracks)); } catch (e) {} }
+function saveDownloads() { try { localStorage.setItem('totify_downloads_meta', JSON.stringify(downloadedTracks)); } catch (e) {} }
 function getArrayIndexOfTrack(trackIndex) { return allTracks.findIndex(t => t.index === trackIndex); }
 function formatTime(seconds) { if (isNaN(seconds) || seconds < 0) return "0:00"; const minutes = Math.floor(seconds / 60); const remainingSeconds = Math.floor(seconds % 60); return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`; }
 
@@ -554,13 +554,9 @@ function updateLikeButtonUI(trackIndex) {
 }
 
 function updatePlayerDownloadIcon(trackIndex) {
-    const track = allTracks.find(t => t.index === trackIndex);
     const dlState = downloadedTracks[trackIndex];
     playerDownloadBtn.className = '';
-    if(dlState) {
-        playerDownloadBtn.classList.add('active');
-        if(dlState.flac && !dlState.video && track && track.video_url) playerDownloadBtn.classList.add('update');
-    }
+    if(dlState) { playerDownloadBtn.classList.add('active'); }
 }
 
 function updatePlaylistView() {
@@ -575,7 +571,7 @@ function updatePlaylistView() {
 }
 
 function preloadAdjacentTracks(currentIndex) {
-    if (allTracks.length === 0 || currentIndex === -1 || !navigator.onLine) return; // Skip if offline to save logic
+    if (allTracks.length === 0 || currentIndex === -1 || !navigator.onLine) return; 
     const currentArrayIndex = getArrayIndexOfTrack(currentIndex);
     const nextIndex = (currentArrayIndex + 1) % allTracks.length; const prevIndex = (currentArrayIndex - 1 + allTracks.length) % allTracks.length;
     const nextTrack = allTracks[nextIndex]; const prevTrack = allTracks[prevIndex];
@@ -584,21 +580,32 @@ function preloadAdjacentTracks(currentIndex) {
     if (nextUrl) { nextAudio.src = nextUrl; nextAudio.load(); } if (prevUrl) { prevAudio.src = prevUrl; prevAudio.load(); }
 }
 
-// OFFLINE AUDIO RESOLVER
-let currentObjectUrls = [];
-function revokeObjectUrls() { currentObjectUrls.forEach(url => URL.revokeObjectURL(url)); currentObjectUrls = []; }
-async function getCachedUrl(url) {
-    if (!url) return null;
+// ----------------------------------------------------
+// LOCALSTORAGE OFFLINE CACHE ENGINE
+// ----------------------------------------------------
+const blobToBase64 = blob => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+});
+
+async function saveToLocalStorage(key, url) {
+    const res = await fetch(url);
+    if(!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+    const blob = await res.blob();
+    const base64 = await blobToBase64(blob);
     try {
-        const cache = await caches.open('totify-downloads');
-        const res = await cache.match(url);
-        if (res) {
-            const blob = await res.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            currentObjectUrls.push(blobUrl);
-            return blobUrl;
-        }
-    } catch(e) {}
+        localStorage.setItem('totify_file_' + key, base64);
+    } catch(e) {
+        throw new Error("LocalStorage is full");
+    }
+}
+
+function getCachedUrl(url) {
+    if (!url) return null;
+    const b64 = localStorage.getItem('totify_file_' + url);
+    if (b64) return b64;
     return url; 
 }
 
@@ -608,12 +615,12 @@ async function loadTrack(index, autoPlay = true, seekTime = 0) {
     
     if (isPlaying) currentAudio.pause(); isPlaying = false; currentTrackIndex = index;
     
-    revokeObjectUrls(); 
-    const imageSource = await getCachedUrl(track.image_url) || "s512.png";
-    const sourceUrl = await getCachedUrl(originalSourceUrl);
-    const videoUrl = track.video_url ? await getCachedUrl(track.video_url) : null;
+    // Auto-resolve to LocalStorage Base64 string if it exists
+    const imageSource = getCachedUrl(track.image_url) || "s512.png";
+    const sourceUrl = getCachedUrl(originalSourceUrl);
+    const videoUrl = track.video_url ? getCachedUrl(track.video_url) : null;
     
-    const fullArtistList = track.artists.join(', '); const primaryArtist = track.primaryArtist; const artistData = allArtists.get(primaryArtist.toLowerCase());
+    const fullArtistList = track.artists.join(', '); const primaryArtist = track.primaryArtist || "Unknown"; const artistData = allArtists.get(primaryArtist.toLowerCase());
     
     playerArt.src = imageSource; playerArt.onload = () => updateDynamicColors(playerArt);
     document.getElementById('playerTrackTitle').textContent = track.title; document.getElementById('playerArtistName').textContent = fullArtistList; document.getElementById('playerTitleSmall').textContent = track.title;
@@ -635,7 +642,8 @@ async function loadTrack(index, autoPlay = true, seekTime = 0) {
     const playerMiniArt = document.getElementById('playerMiniArt'); const topSection = document.getElementById('playerTopSection'); const scrollContentBottom = document.getElementById('scrollableContentBottom');
     playerMiniArt.src = imageSource; 
 
-    if (videoUrl && window.innerWidth < 768) {
+    // Don't show video if we are offline and loading from cache to save LocalStorage limit
+    if (videoUrl && window.innerWidth < 768 && navigator.onLine) {
         videoCanvas.src = videoUrl; videoCanvas.style.display = 'block'; gradientOverlay.style.display = 'block'; videoSpacer.classList.add('active'); artContainer.classList.add('hidden-for-video'); topSection.classList.add('video-active'); scrollContentBottom.classList.add('video-active');
         videoCanvas.play().catch(e => console.log('Video autoplay blocked'));
     } else {
@@ -708,7 +716,7 @@ filterTabs.forEach(tab => {
     });
 });
 
-// --- DOWNLOAD SYSTEM LOGIC ---
+// --- MASSIVE OFFLINE DOWNLOAD SYSTEM (LOCALSTORAGE) ---
 playerDownloadBtn.addEventListener('click', () => {
     if (currentTrackIndex !== -1) openDownloadModal(currentTrackIndex);
 });
@@ -719,80 +727,78 @@ window.openDownloadModal = function(trackIndex) {
     document.getElementById('dlModalTitle').innerText = track.title;
     
     const dlState = downloadedTracks[trackIndex];
-    const dlVideoStatus = document.getElementById('dlVideoStatus');
-    const dlMp3Btn = document.getElementById('dlMp3Btn');
-    const dlFlacBtn = document.getElementById('dlFlacBtn');
+    const dlAppBtn = document.getElementById('dlAppBtn');
+    const dlDeviceBtn = document.getElementById('dlDeviceBtn');
     const dlRemoveBtn = document.getElementById('dlRemoveBtn');
 
-    dlMp3Btn.innerText = (dlState && dlState.mp3) ? 'MP3 Downloaded ✓' : 'Download MP3';
-    dlMp3Btn.style.opacity = (dlState && dlState.mp3) ? '0.5' : '1';
-    dlMp3Btn.onclick = () => (dlState && dlState.mp3) ? null : startDownload(trackIndex, 'mp3');
+    // App Download (LocalStorage)
+    dlAppBtn.innerText = dlState ? 'Saved in App ✓' : 'Download to App (Offline Playlist)';
+    dlAppBtn.style.opacity = dlState ? '0.5' : '1';
+    dlAppBtn.onclick = () => dlState ? null : startAppDownload(trackIndex);
 
-    dlFlacBtn.innerText = (dlState && dlState.flac) ? 'FLAC Downloaded ✓' : 'Download FLAC';
-    dlFlacBtn.style.opacity = (dlState && dlState.flac) ? '0.5' : '1';
-    
-    if (dlState && dlState.flac && !dlState.video && track.video_url) {
-        dlFlacBtn.innerText = 'Update Video 🟡'; dlFlacBtn.style.opacity = '1';
-        dlFlacBtn.onclick = () => startDownload(trackIndex, 'flac'); 
-    } else {
-        dlFlacBtn.onclick = () => (dlState && dlState.flac) ? null : startDownload(trackIndex, 'flac');
-    }
+    // Private Device Download (Files/OS)
+    dlDeviceBtn.onclick = () => {
+        const url = currentFormat === 'flac' ? (track.flac_url || track.mp3_url) : (track.mp3_url || track.flac_url);
+        if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.download = track.title;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showNotification(`Downloading ${track.title} directly to your device.`);
+            closeDownloadModal();
+        }
+    };
     
     dlRemoveBtn.style.display = dlState ? 'block' : 'none';
-    dlRemoveBtn.onclick = () => removeDownload(trackIndex);
+    dlRemoveBtn.onclick = () => removeAppDownload(trackIndex);
 
     modal.classList.add('show');
 }
 window.closeDownloadModal = function() { document.getElementById('downloadModal').classList.remove('show'); }
 
-async function startDownload(trackIndex, format) {
+async function startAppDownload(trackIndex) {
+    const track = allTracks.find(t => t.index === trackIndex); if(!track) return;
+    closeDownloadModal();
+    
+    try {
+        showNotification(`Caching ${track.title} in LocalStorage...`);
+        const format = currentFormat;
+        const audioUrl = format === 'flac' ? (track.flac_url || track.mp3_url) : (track.mp3_url || track.flac_url);
+        
+        if(track.image_url && track.image_url !== 's512.png') await saveToLocalStorage(track.image_url, track.image_url);
+        if(audioUrl) await saveToLocalStorage(audioUrl, audioUrl);
+        
+        if(!downloadedTracks[trackIndex]) downloadedTracks[trackIndex] = {};
+        downloadedTracks[trackIndex][format] = true;
+        
+        saveDownloads(); updatePlayerDownloadIcon(trackIndex); renderLibraryCards();
+        showNotification(`Saved ${track.title} inside the App offline cache.`);
+    } catch(e) {
+        console.error("Download failed:", e);
+        if (e.message.includes("LocalStorage is full")) {
+            showNotification("Storage Limit Reached: Browser LocalStorage only holds ~5MB total!");
+        } else if (e.name === 'TypeError') {
+            showNotification("CORS Error: Firebase blocked JS download. Use 'Download to Device' button instead.");
+        } else {
+            showNotification("Download failed: " + e.message);
+        }
+    }
+}
+
+async function removeAppDownload(trackIndex) {
     const track = allTracks.find(t => t.index === trackIndex); if(!track) return;
     
-    if ('caches' in window) {
-        try {
-            const cache = await caches.open('totify-downloads');
-            const urlsToCache = [];
-            
-            if(track.image_url && track.image_url !== 's512.png') urlsToCache.push(track.image_url);
-            
-            let hasVideo = false;
-            if(format === 'mp3' && track.mp3_url) urlsToCache.push(track.mp3_url);
-            if(format === 'flac' && track.flac_url) {
-                urlsToCache.push(track.flac_url);
-                if(track.video_url) { urlsToCache.push(track.video_url); hasVideo = true; }
-            }
-            
-            showNotification(`Downloading ${format.toUpperCase()}...`);
-            await cache.addAll(urlsToCache.filter(url => url != null));
-            
-            if(!downloadedTracks[trackIndex]) downloadedTracks[trackIndex] = {};
-            downloadedTracks[trackIndex][format] = true;
-            if(format === 'flac') downloadedTracks[trackIndex].video = hasVideo;
-            
-            saveDownloads(); updatePlayerDownloadIcon(trackIndex); renderLibraryCards();
-            showNotification(`Downloaded ${track.title} (${format.toUpperCase()})`);
-        } catch(e) {
-            console.error("Cache API failed:", e);
-            showNotification("Download failed. Check connection.");
-        }
-    } else { showNotification("Offline caching not supported."); }
-    closeDownloadModal();
-}
-
-async function removeDownload(trackIndex) {
-    const track = allTracks.find(t => t.index === trackIndex); if(!track) return;
-    if ('caches' in window) {
-        try {
-            const cache = await caches.open('totify-downloads');
-            const possibleUrls = [track.image_url, track.mp3_url, track.flac_url, track.video_url].filter(u => u != null && u !== 's512.png');
-            for(let url of possibleUrls) { await cache.delete(url); }
-        } catch(e) {}
-    }
+    const possibleUrls = [track.image_url, track.mp3_url, track.flac_url, track.video_url].filter(u => u != null && u !== 's512.png');
+    for(let url of possibleUrls) { localStorage.removeItem('totify_file_' + url); }
+    
     delete downloadedTracks[trackIndex]; saveDownloads(); updatePlayerDownloadIcon(trackIndex); renderLibraryCards();
-    closeDownloadModal(); showNotification("Removed from device.");
+    closeDownloadModal(); showNotification("Removed from App LocalStorage.");
 }
 
-// Track listing generation (No Download Icons in the list anymore!)
+// Track listing generation
 function createTrackListItem(data, containerType, trackNumber = null) {
     const item = document.createElement('li'); item.className = 'track-item'; item.dataset.index = data.index; 
     
@@ -905,11 +911,14 @@ footerNavItems.forEach(item => {
     });
 });
 
-// Cache metadata for offline boot
+// Cache metadata using LocalStorage for offline boot
 function saveMetadata() {
-    localStorage.setItem('totify_offline_tracks', JSON.stringify(allTracks));
-    localStorage.setItem('totify_offline_artists', JSON.stringify(Array.from(allArtists.entries())));
+    try {
+        localStorage.setItem('totify_offline_tracks', JSON.stringify(allTracks));
+        localStorage.setItem('totify_offline_artists', JSON.stringify(Array.from(allArtists.entries())));
+    } catch(e) {}
 }
+
 function loadOfflineMetadata() {
     try {
         const trks = localStorage.getItem('totify_offline_tracks');
@@ -921,10 +930,11 @@ function loadOfflineMetadata() {
 
 async function loadMusicAndArtists() {
     if (!navigator.onLine) {
-        showNotification("Offline Mode: Loading downloads");
-        loadOfflineMetadata(); loadMusic(); window.hidePreLoader();
+        showNotification("Offline Mode: Loading from LocalStorage");
+        loadOfflineMetadata(); 
+        loadMusic(); 
+        window.hidePreLoader();
         
-        // Force navigate to library and open downloads automatically
         document.querySelectorAll('.app-page').forEach(page => page.classList.remove('active')); 
         document.getElementById('libraryPage').classList.add('active'); 
         footerNavItems.forEach(nav => nav.classList.remove('active')); 
@@ -936,17 +946,28 @@ async function loadMusicAndArtists() {
 
     try {
          const musicSnapshot = await getDocs(collection(db, "music")); let index = 0;
-         musicSnapshot.forEach(doc => { const data = doc.data(); const artists = Array.isArray(data.artists) ? data.artists.map(a => a.name) : [data.artist || "Unknown"];
-             allTracks.push({ ...data, index: index++, artists, primaryArtist: artists[0], duration: data.duration || 180, image_url: data.image_url || data.image || data.image_base64 || "s512.png", video_url: data.video_url || data.video || null, lyrics: data.lyrics || '' });
+         musicSnapshot.forEach(doc => { 
+             const data = doc.data(); 
+             const artists = Array.isArray(data.artists) ? data.artists.map(a => a.name || a) : [data.artist || "Unknown"];
+             allTracks.push({ ...data, index: index++, artists, primaryArtist: artists[0] || "Unknown", duration: data.duration || 180, image_url: data.image_url || data.image || data.image_base64 || "s512.png", video_url: data.video_url || data.video || null, lyrics: data.lyrics || '' });
          });
-         const artistSnapshot = await getDocs(collection(db, "artists"));
-         artistSnapshot.forEach(doc => { const data = doc.data(); allArtists.set(data.name.toLowerCase(), { ...data, image_url: data.image_url || data.image_base64_highres || data.image_base64 || data.image || "s512.png" }); });
          
-         saveMetadata(); loadMusic(); window.hidePreLoader(); 
-    } catch (error) { window.hidePreLoader(); console.error(error); showNotification("Network Error"); }
+         const artistSnapshot = await getDocs(collection(db, "artists"));
+         artistSnapshot.forEach(doc => { 
+             const data = doc.data(); 
+             const artistName = data.name || "Unknown";
+             allArtists.set(artistName.toLowerCase(), { ...data, image_url: data.image_url || data.image_base64_highres || data.image_base64 || data.image || "s512.png" }); 
+         });
+         
+         saveMetadata(); 
+         loadMusic(); window.hidePreLoader(); 
+    } catch (error) { 
+        window.hidePreLoader(); 
+        console.error(error); 
+        showNotification("Error: " + error.message); 
+    }
 }
 
-// Global Online/Offline Event Listeners to handle sudden drops
 window.addEventListener('offline', () => { showNotification("You are offline."); });
 window.addEventListener('online', () => { showNotification("Back online!"); });
 
