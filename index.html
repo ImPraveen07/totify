@@ -33,13 +33,18 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--spotify-black);col
 
 /* SPOTIFY STYLE TOAST NOTIFICATION */
 .toast-notification {
-    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(50px);
-    background: #ffffff; color: #000000; padding: 12px 24px; border-radius: 50px;
-    font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    z-index: 9999; opacity: 0; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    pointer-events: none; text-align: center; white-space: normal; width: 90%; max-width: 350px;
+    position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: #333333; color: #ffffff; padding: 10px 16px; border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 9999; opacity: 0; 
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    pointer-events: none; display: flex; align-items: center; gap: 12px;
+    width: 90%; max-width: 350px;
 }
 .toast-notification.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast-img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; display: none; }
+.toast-text { display: flex; flex-direction: column; text-align: left; overflow: hidden; }
+.toast-title { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; margin-bottom: 2px;}
+.toast-msg { font-size: 13px; color: #b3b3b3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .library-header{display:flex;justify-content:space-between;align-items:center;padding:16px;padding-top:50px;font-size:24px;font-weight:700;}
 .library-header .title{font-size:24px;font-weight:700;}
@@ -195,7 +200,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 }
 .download-modal h3 { margin: 0 0 5px 0; font-size: 18px; }
 .download-modal p { margin: 0 0 20px 0; font-size: 13px; color: var(--text-faded); }
-
 .download-btn {
     display: block; width: 100%; padding: 14px; margin: 10px 0;
     background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);
@@ -232,7 +236,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 </head>
 <body>
 
-<div id="toastNotification" class="toast-notification"></div>
+<!-- SPOTIFY STYLE NOTIFICATION -->
+<div id="toastNotification" class="toast-notification">
+    <img id="toastImg" src="" class="toast-img">
+    <div class="toast-text">
+        <span id="toastTitle" class="toast-title"></span>
+        <span id="toastMsg" class="toast-msg"></span>
+    </div>
+</div>
 
 <div id="preLoader" style="background: var(--spotify-black); z-index: 9999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease-out;">
     <img src="s512.png" alt="Totify" style="width: 100px; height: 100px; border-radius: 20px; animation: smoothFade 1s infinite alternate;">
@@ -429,6 +440,7 @@ let downloadedTracks = {};
 
 let currentFormat = localStorage.getItem('totify_audio_format') || 'flac'; let currentParsedLyrics = null; 
 
+// UI Elements
 const musicContainer = document.getElementById('musicContainer'); const artistContainer = document.getElementById('artistContainer');
 const tracksByArtistContainer = document.getElementById('tracksByArtistContainer'); const likedSongsPlaylistContainer = document.getElementById('likedSongsPlaylistContainer');
 const downloadedSongsPlaylistContainer = document.getElementById('downloadedSongsPlaylistContainer');
@@ -452,13 +464,57 @@ const playerDownloadBtn = document.getElementById('playerDownloadBtn');
 
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(e => console.error('SW failed:', e)); }); }
 
-// SPOTIFY-STYLE NOTIFICATION
+// SPOTIFY-STYLE NOTIFICATION (Image + Bold Title + Message)
 let toastTimeout;
-function showNotification(msg) {
+function showNotification(msg, title = "Notification", imgSrc = null) {
     const toast = document.getElementById('toastNotification');
-    toast.innerText = msg; toast.classList.add('show');
-    clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.classList.remove('show'), 3500);
+    document.getElementById('toastTitle').innerText = title;
+    document.getElementById('toastMsg').innerText = msg;
+    
+    const imgEl = document.getElementById('toastImg');
+    if (imgSrc) {
+        imgEl.src = imgSrc;
+        imgEl.style.display = 'block';
+    } else {
+        imgEl.style.display = 'none';
+    }
+    
+    toast.classList.add('show');
+    clearTimeout(toastTimeout); 
+    toastTimeout = setTimeout(() => toast.classList.remove('show'), 3500);
 }
+
+// ----------------------------------------------------
+// PURE LOCALSTORAGE OFFLINE ENGINE (BASE64)
+// ----------------------------------------------------
+const blobToBase64 = blob => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+});
+
+async function saveToLocalStorage(key, url) {
+    if(!url) return;
+    try {
+        const res = await fetch(url);
+        if(!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const blob = await res.blob();
+        const base64 = await blobToBase64(blob);
+        localStorage.setItem('totify_file_' + key, base64);
+    } catch(e) {
+        if(e.name === "QuotaExceededError" || e.message.includes("quota")) {
+            throw new Error("LocalStorage is full");
+        }
+        throw e;
+    }
+}
+
+function getCachedUrl(key) {
+    if (!key) return null;
+    return localStorage.getItem('totify_file_' + key) || null; 
+}
+
 
 // DRAGGABLE FLAC/MP3 BUTTON
 let isDraggingBtn = false; let startDragX = 0, startDragY = 0; let didMoveBtn = false; 
@@ -580,45 +636,20 @@ function preloadAdjacentTracks(currentIndex) {
     if (nextUrl) { nextAudio.src = nextUrl; nextAudio.load(); } if (prevUrl) { prevAudio.src = prevUrl; prevAudio.load(); }
 }
 
-// ----------------------------------------------------
-// LOCALSTORAGE OFFLINE CACHE ENGINE
-// ----------------------------------------------------
-const blobToBase64 = blob => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-});
-
-async function saveToLocalStorage(key, url) {
-    const res = await fetch(url);
-    if(!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-    const blob = await res.blob();
-    const base64 = await blobToBase64(blob);
-    try {
-        localStorage.setItem('totify_file_' + key, base64);
-    } catch(e) {
-        throw new Error("LocalStorage is full");
-    }
-}
-
-function getCachedUrl(url) {
-    if (!url) return null;
-    const b64 = localStorage.getItem('totify_file_' + url);
-    if (b64) return b64;
-    return url; 
-}
-
 async function loadTrack(index, autoPlay = true, seekTime = 0) {
     const track = allTracks.find(t => t.index === index); if (!track) return;
     let originalSourceUrl = currentFormat === 'flac' ? (track.flac_url || track.mp3_url) : (track.mp3_url || track.flac_url); if (!originalSourceUrl) return;
     
     if (isPlaying) currentAudio.pause(); isPlaying = false; currentTrackIndex = index;
     
-    // Auto-resolve to LocalStorage Base64 string if it exists
-    const imageSource = getCachedUrl(track.image_url) || "s512.png";
-    const sourceUrl = getCachedUrl(originalSourceUrl);
-    const videoUrl = track.video_url ? getCachedUrl(track.video_url) : null;
+    // Automatically load Base64 local file if cached, else stream from URL
+    const cachedAudio = getCachedUrl(originalSourceUrl);
+    const cachedImage = getCachedUrl(track.image_url);
+    const cachedVideo = track.video_url ? getCachedUrl(track.video_url) : null;
+
+    const imageSource = cachedImage || track.image_url || "s512.png";
+    const sourceUrl = cachedAudio || originalSourceUrl;
+    const videoUrl = cachedVideo || track.video_url || null;
     
     const fullArtistList = track.artists.join(', '); const primaryArtist = track.primaryArtist || "Unknown"; const artistData = allArtists.get(primaryArtist.toLowerCase());
     
@@ -642,8 +673,8 @@ async function loadTrack(index, autoPlay = true, seekTime = 0) {
     const playerMiniArt = document.getElementById('playerMiniArt'); const topSection = document.getElementById('playerTopSection'); const scrollContentBottom = document.getElementById('scrollableContentBottom');
     playerMiniArt.src = imageSource; 
 
-    // Don't show video if we are offline and loading from cache to save LocalStorage limit
-    if (videoUrl && window.innerWidth < 768 && navigator.onLine) {
+    // Stop video trying to play if user is offline but didn't cache the video
+    if (videoUrl && window.innerWidth < 768 && (navigator.onLine || cachedVideo)) {
         videoCanvas.src = videoUrl; videoCanvas.style.display = 'block'; gradientOverlay.style.display = 'block'; videoSpacer.classList.add('active'); artContainer.classList.add('hidden-for-video'); topSection.classList.add('video-active'); scrollContentBottom.classList.add('video-active');
         videoCanvas.play().catch(e => console.log('Video autoplay blocked'));
     } else {
@@ -674,9 +705,15 @@ miniPlayer.addEventListener('click', (e) => { if(!e.target.closest('#miniPlayBtn
 
 likeBtn.addEventListener('click', (e) => {
     e.stopPropagation(); if (currentTrackIndex === -1) return;
+    const track = allTracks.find(t => t.index === currentTrackIndex);
     const newLikedState = !likeBtn.classList.contains('fas.fa-check-circle'); 
-    if (newLikedState) { likeBtn.className = 'fas fa-check-circle like-animation'; likeBtn.style.color = 'var(--spotify-green)'; likedTrackIndexes[currentTrackIndex] = true; showNotification("Added to Liked Songs"); } 
-    else { likeBtn.className = 'fas fa-plus-circle'; likeBtn.style.color = 'var(--text-faded)'; delete likedTrackIndexes[currentTrackIndex]; showNotification("Removed from Liked Songs");}
+    if (newLikedState) { 
+        likeBtn.className = 'fas fa-check-circle like-animation'; likeBtn.style.color = 'var(--spotify-green)'; likedTrackIndexes[currentTrackIndex] = true; 
+        showNotification("Added to Liked Songs", track.title, track.image_url); 
+    } else { 
+        likeBtn.className = 'fas fa-plus-circle'; likeBtn.style.color = 'var(--text-faded)'; delete likedTrackIndexes[currentTrackIndex]; 
+        showNotification("Removed from Liked Songs", track.title, track.image_url);
+    }
     saveLikedData(); renderLibraryCards(); 
 });
 
@@ -716,7 +753,7 @@ filterTabs.forEach(tab => {
     });
 });
 
-// --- MASSIVE OFFLINE DOWNLOAD SYSTEM (LOCALSTORAGE) ---
+// --- PURE LOCALSTORAGE DOWNLOAD SYSTEM ---
 playerDownloadBtn.addEventListener('click', () => {
     if (currentTrackIndex !== -1) openDownloadModal(currentTrackIndex);
 });
@@ -731,7 +768,7 @@ window.openDownloadModal = function(trackIndex) {
     const dlDeviceBtn = document.getElementById('dlDeviceBtn');
     const dlRemoveBtn = document.getElementById('dlRemoveBtn');
 
-    // App Download (LocalStorage)
+    // App Download (LocalStorage Base64)
     dlAppBtn.innerText = dlState ? 'Saved in App ✓' : 'Download to App (Offline Playlist)';
     dlAppBtn.style.opacity = dlState ? '0.5' : '1';
     dlAppBtn.onclick = () => dlState ? null : startAppDownload(trackIndex);
@@ -747,7 +784,7 @@ window.openDownloadModal = function(trackIndex) {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            showNotification(`Downloading ${track.title} directly to your device.`);
+            showNotification(`Saving to your phone's File Manager...`, track.title, track.image_url);
             closeDownloadModal();
         }
     };
@@ -764,7 +801,7 @@ async function startAppDownload(trackIndex) {
     closeDownloadModal();
     
     try {
-        showNotification(`Caching ${track.title} in LocalStorage...`);
+        showNotification("Starting Download...", track.title, track.image_url);
         const format = currentFormat;
         const audioUrl = format === 'flac' ? (track.flac_url || track.mp3_url) : (track.mp3_url || track.flac_url);
         
@@ -775,15 +812,15 @@ async function startAppDownload(trackIndex) {
         downloadedTracks[trackIndex][format] = true;
         
         saveDownloads(); updatePlayerDownloadIcon(trackIndex); renderLibraryCards();
-        showNotification(`Saved ${track.title} inside the App offline cache.`);
+        showNotification("Saved to App LocalStorage", track.title, track.image_url);
     } catch(e) {
         console.error("Download failed:", e);
         if (e.message.includes("LocalStorage is full")) {
-            showNotification("Storage Limit Reached: Browser LocalStorage only holds ~5MB total!");
+            showNotification("Storage Full! Browser LocalStorage holds max ~5MB.", "Error");
         } else if (e.name === 'TypeError') {
-            showNotification("CORS Error: Firebase blocked JS download. Use 'Download to Device' button instead.");
+            showNotification("CORS Error: Firebase blocked JS download. Use 'Download to Device' button instead.", "Error");
         } else {
-            showNotification("Download failed: " + e.message);
+            showNotification("Download failed: " + e.message, "Error");
         }
     }
 }
@@ -795,7 +832,7 @@ async function removeAppDownload(trackIndex) {
     for(let url of possibleUrls) { localStorage.removeItem('totify_file_' + url); }
     
     delete downloadedTracks[trackIndex]; saveDownloads(); updatePlayerDownloadIcon(trackIndex); renderLibraryCards();
-    closeDownloadModal(); showNotification("Removed from App LocalStorage.");
+    closeDownloadModal(); showNotification("Removed from App Storage", track.title, track.image_url);
 }
 
 // Track listing generation
@@ -911,12 +948,12 @@ footerNavItems.forEach(item => {
     });
 });
 
-// Cache metadata using LocalStorage for offline boot
+// Cache metadata safely (Ignore quota errors gracefully)
 function saveMetadata() {
     try {
         localStorage.setItem('totify_offline_tracks', JSON.stringify(allTracks));
         localStorage.setItem('totify_offline_artists', JSON.stringify(Array.from(allArtists.entries())));
-    } catch(e) {}
+    } catch(e) { console.warn("Quota exceeded for metadata, couldn't save local database copy."); }
 }
 
 function loadOfflineMetadata() {
@@ -930,11 +967,12 @@ function loadOfflineMetadata() {
 
 async function loadMusicAndArtists() {
     if (!navigator.onLine) {
-        showNotification("Offline Mode: Loading from LocalStorage");
+        showNotification("You can still play cached songs.", "Offline Mode", "s512.png");
         loadOfflineMetadata(); 
         loadMusic(); 
         window.hidePreLoader();
         
+        // Force navigate to library and open downloads automatically
         document.querySelectorAll('.app-page').forEach(page => page.classList.remove('active')); 
         document.getElementById('libraryPage').classList.add('active'); 
         footerNavItems.forEach(nav => nav.classList.remove('active')); 
@@ -959,17 +997,22 @@ async function loadMusicAndArtists() {
              allArtists.set(artistName.toLowerCase(), { ...data, image_url: data.image_url || data.image_base64_highres || data.image_base64 || data.image || "s512.png" }); 
          });
          
+         loadMusic(); 
+         window.hidePreLoader(); 
          saveMetadata(); 
-         loadMusic(); window.hidePreLoader(); 
     } catch (error) { 
         window.hidePreLoader(); 
         console.error(error); 
-        showNotification("Error: " + error.message); 
+        showNotification(error.message, "Error"); 
     }
 }
 
-window.addEventListener('offline', () => { showNotification("You are offline."); });
-window.addEventListener('online', () => { showNotification("Back online!"); });
+// Global Online/Offline Event Listeners
+window.addEventListener('offline', () => { showNotification("You can still play downloaded songs.", "Offline Mode", "s512.png"); });
+window.addEventListener('online', () => { 
+    showNotification("You're back online.", "Connection Restored", "s512.png"); 
+    if(allTracks.length === 0) loadMusicAndArtists(); 
+});
 
 loadSavedData(); loadMusicAndArtists();
 </script>
